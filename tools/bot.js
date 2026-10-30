@@ -1,7 +1,7 @@
 /* Jugador de referencia para las pruebas: resuelve cualquier instancia con la información del propio ejercicio. */
 /* Funciona en Node (módulo) y en el navegador (carga con fetch + eval; expone AC_BOT). */
 const AC = globalThis.AC;
-const L = AC.logic;
+const L = AC.logic, Rat0 = AC.Rat;
 
 function rutaMinima(inicio, leyes) {
   let fr = [{ f: L.parse(inicio), ruta: [] }]; const vistos = new Set([L.str(fr[0].f)]);
@@ -24,10 +24,17 @@ function resolver(inst) {
     case 'conjunto-indices': return a.esperado.slice();
     case 'ruta-valida': return rutaMinima(a.inicio, a.leyes);
     case 'vf-justificado': return { valor: a.valor, just: a.just };
-    case 'igual-conjunto': return AC.conj.fmt(a.esperado);
+    case 'igual-conjunto': case 'conjunto-racionales': case 'conjunto-complejos': return AC.conj.fmt(a.esperado);
+    case 'equivalente-complejo': case 'factorizacion': return inst.solucionExpr;
+    case 'tupla-racional': return a.esperado.slice();
+    case 'combinacion-lineal': { const [g, x, y] = AC.numth.egcd(a.a, a.b); const k = a.d / g; return [String(x * k), String(y * k)]; }
     case 'equivalente-expr': return inst.solucionExpr;
     case 'satisface-entero': { for (let n = a.rango[0]; n <= a.rango[1]; n++) if (!AC.afirmaciones[a.id](n, a)) return String(n); return null; }
     case 'matriz': return a.esperado.map(f => f.slice());
+    case 'nucleo-vector': return AC.mat.fmt([AC.mat.nucleo(AC.mat.de(a.A.map(f => f.map(x => Rat0.parse(String(x))))))[0]])[0];
+    case 'dependencia-lineal': { const V = a.vecs.map(f => f.map(x => Rat0.parse(String(x)))); return AC.mat.fmt([AC.mat.nucleo(AC.mat.T(V))[0]])[0]; }
+    case 'base-nucleo': return AC.mat.fmt(AC.mat.nucleo(AC.mat.de(a.A.map(f => f.map(x => Rat0.parse(String(x)))))));
+    case 'completa-base': { const V = a.vecs.map(f => f.map(x => Rat0.parse(String(x)))); for (let i = 0; i < a.n; i++) { const e = Array.from({ length: a.n }, (_, j) => Rat0.of(j === i ? 1 : 0)); if (AC.mat.rango(V.concat([e])) === V.length + 1) return AC.mat.fmt([e])[0]; } return null; }
     case 'asignacion': {
       const f = L.parse(a.f), g = L.parse(a.g);
       return L.envs(a.vars).find(e => L.ev(f, e) !== L.ev(g, e));
@@ -54,10 +61,17 @@ function equivocada(inst) {
     case 'conjunto-indices': return r.length ? [] : [0];
     case 'ruta-valida': return [];
     case 'vf-justificado': return { valor: !r.valor, just: r.just };
-    case 'igual-conjunto': return '{99}';
+    case 'igual-conjunto': case 'conjunto-racionales': case 'conjunto-complejos': return '{99}';
+    case 'equivalente-complejo': return '1234+4321i';
+    case 'factorizacion': return '(x+12345)';
+    case 'combinacion-lineal': return ['0', '0'];
+    case 'tupla-racional': return a.esperado.map((x, i) => (i === 0 ? String(Number(x) + 1) : x));
     case 'equivalente-expr': return '1/7';
     case 'satisface-entero': { for (let n = a.rango[0]; n <= a.rango[1]; n++) if (AC.afirmaciones[a.id](n, a)) return String(n); return String(a.rango[0] - 1); }
-    case 'matriz': return r.map((f, i) => f.map((x, j) => (i === 0 && j === 0 ? '9' : x)));
+    case 'matriz': return r.map((f, i) => f.map((x, j) => (i === 0 && j === 0 ? '12345' : x)));
+    case 'nucleo-vector': case 'completa-base': return r.map(() => '0');
+    case 'dependencia-lineal': return r.map(() => '0');
+    case 'base-nucleo': { const jj = r[0].findIndex((_, j) => a.A.some(f => String(f[j]) !== '0')); return r.map((f, i) => f.map((x, j) => (i === 0 && j === jj ? String(Number(x) + 12345) : x))); }
     case 'asignacion': { const f = L.parse(a.f), g = L.parse(a.g); return L.envs(a.vars).find(e => L.ev(f, e) === L.ev(g, e)); }
     case 'demo-ordenar': return { usadas: r.usadas.slice().reverse() };
     case 'demo-construccion': return { usadas: r.usadas, just: Object.fromEntries(Object.keys(r.just).map(k => [k, 'hip'])) };

@@ -13,7 +13,10 @@
       case 'logica': {
         try { return L.equiv(L.parse(String(resp)), L.parse(sig.respuesta)); } catch (e) { return false; }
       }
-      case 'conjunto': { const r = AC.conj.parse(resp), t = AC.conj.parse(sig.respuesta); return r !== null && t !== null && AC.conj.eq(r, t); }
+      case 'conjunto': { const r = AC.conj.parse(resp), t = AC.conj.parse(sig.respuesta); if (r === null || t === null) return false; const nr = AC.conj.normTokens(r, inst.entrada.norm), nt = AC.conj.normTokens(t, inst.entrada.norm); return nr !== null && nt !== null && AC.conj.eq(nr, nt); }
+      case 'complejo': { const z = AC.cx.parse(String(resp)), w = AC.cx.parse(sig.respuesta); return !!z && !!w && z.eq(w); }
+      case 'tupla': { const v = (resp || []).map(x => Rat.parse(String(x == null ? '' : x))); return v.length === sig.respuesta.length && v.every((x, i) => { const w = Rat.parse(String(sig.respuesta[i])); return x && w && x.eq(w); }); }
+      case 'matriz': { if (!Array.isArray(resp) || resp.length !== sig.respuesta.length) return false; return sig.respuesta.every((f, i) => f.every((x, j) => { const a = Rat.parse(String((resp[i] || [])[j] || '')), b = Rat.parse(String(x)); return a && b && a.eq(b); })); }
       case 'expr': { try { return AC.expr.equiv(String(resp), sig.respuesta); } catch (e) { return false; } }
       case 'eleccion': return resp === sig.respuesta;
       case 'multiple': {

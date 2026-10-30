@@ -8,6 +8,7 @@
     if (tema === 'auto') tema = globalThis.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'claro' : 'oscuro';
     raiz.dataset.tema = tema;
     raiz.classList.toggle('reducir', !!a.reducirAnim);
+    if (AC.companero) AC.companero.refrescar();
     const m = ui.$('#btn-sonido');
     if (m) { m.setAttribute('aria-pressed', String(!a.silencio)); m.textContent = a.silencio ? '🔇' : '🔊'; m.setAttribute('aria-label', a.silencio ? 'Activar sonidos' : 'Silenciar sonidos'); }
     const mt = document.querySelector('meta[name=theme-color]');
@@ -87,7 +88,8 @@
     if (msgs.length) { aviso.textContent = msgs.join(' '); aviso.hidden = false; }
     window.addEventListener('hashchange', ruta);
     ruta();
-    if (!J.estado.ajustes.convencionesVistas) convenciones();
+    AC.companero.montar();
+    if (!J.estado.ajustes.convencionesVistas) convenciones(); else setTimeout(() => AC.companero.saludar(), 600);
   };
   if (typeof module !== 'undefined') module.exports = AC;
 })(globalThis.AC = globalThis.AC || {});

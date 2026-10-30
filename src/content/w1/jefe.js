@@ -7,6 +7,7 @@
   ref('b.igualdad', 'propiedad-base', 'Propiedades de la igualdad: sustituir iguales por iguales');
   ref('d.identidad', 'definicion', 'Identidad: id(x) = x, y h∘id = h = id∘h');
 
+  R.jefe(1, { id: 'J1', titulo: 'El Guardián del Principio', estrategia: 'w1.n5.clasificar-metodo', demos: ['dem.jefe-inversa-composicion', 'dem.jefe-complemento-inclusion', 'dem.jefe-suma-cubos'] });
   const J = { nivel: 'J1', habilidades: [] };
 
   /* J-A: la inversa de una composición (usa t.comp-biyectiva y t.biyectiva-inversa) */

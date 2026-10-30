@@ -635,7 +635,7 @@ Esta lista es **legible por máquina**: `tools/test.js` la parseará desde `cont
 [2.1] t.div-transitiva <-
 [2.1] t.div-cota <-
 [2.1] t.div-antisimetria <- t.div-cota
-[2.1] t.algoritmo-division <- t.buen-orden
+[2.1] t.algoritmo-division <- t.buen-orden, t.div-cota
 [2.2] t.mcd-euclides <- t.div-combinacion
 [2.2] t.bezout <- t.algoritmo-division, t.buen-orden, t.div-combinacion
 [2.2] t.lema-euclides <- t.bezout, t.div-combinacion
@@ -759,3 +759,60 @@ Decisiones de §12.1 confirmadas («Sí, adelante») y aplicadas tal como se pro
 - **Desbloqueo**: el primer nivel de un mundo se abre al derrotar al jefe del mundo anterior (si lo tiene).
 - **Árbol de teoremas (§11.4)**: tres cambios de `requiere` (ver `docs/revision-matematica.md`, duda 4). El bloque sigue siendo el que lee el test.
 - **Verificación**: `tools/tex.js` comprueba con KaTeX todos los fragmentos de TeX que puede ver el jugador y detecta barras invertidas sin duplicar; `tools/humo.js` monta en un navegador real cada tipo de ejercicio y lo resuelve a clics.
+
+## Apéndice C. Árbol de teoremas de los Mundos 3 a 8 (generado)
+
+Este bloque lo escribe `node tools/arbol.js` a partir del contenido registrado y lo lee `tools/test.js` (si el contenido cambia y el bloque no, la prueba falla).
+
+<!-- ARBOL:INICIO -->
+```text
+[3.1] t.grado-producto <- 
+[3.1] t.division-polinomios <- t.grado-producto
+[3.1] t.teorema-resto <- t.division-polinomios
+[3.1] t.teorema-factor <- t.teorema-resto
+[3.2] t.raices-maximo <- t.teorema-factor, t.grado-producto
+[3.2] t.identidad-polinomios <- t.raices-maximo
+[3.2] t.raices-racionales <- t.lema-euclides
+[3.2] t.raiz-multiple <- t.teorema-factor
+[3.3] t.mcd-polinomios <- t.division-polinomios
+[3.3] t.cuadratica-irreducible <- t.teorema-factor
+[3.3] t.cubica-irreducible <- t.teorema-factor, t.grado-producto
+[3.3] t.conjugadas <- t.conj-producto
+[3.4] t.cuadratica-formula <- t.teorema-factor
+[3.4] t.vieta-cuadratica <- t.teorema-factor
+[3.4] t.vieta-cubica <- t.vieta-cuadratica
+[3.4] t.potencias-raices <- t.vieta-cubica
+[4.1] t.mat-producto-asoc <- 
+[4.1] t.mat-transpuesta-producto <- 
+[4.1] t.mat-inversa-unica <- t.mat-producto-asoc
+[4.1] t.mat-inversa-producto <- t.mat-inversa-unica
+[4.2] t.ops-elementales <- 
+[4.2] t.solucion-general <- 
+[4.2] t.homogeneo-libres <- t.ops-elementales
+[4.2] t.incompatible <- t.ops-elementales
+[4.3] t.rouche-capelli <- t.incompatible
+[4.3] t.inversa-gauss <- t.ops-elementales, t.mat-inversa-producto
+[4.3] t.invertible-equivalencias <- t.inversa-gauss
+[4.3] t.nulidad <- t.solucion-general
+[4.4] t.det-invertible-2x2 <- t.mat-inversa-unica
+[4.4] t.det-producto-2x2 <- 
+[4.4] t.cramer-2x2 <- t.det-invertible-2x2
+[4.4] t.det-triangular <- 
+[5.1] t.subespacio-criterio <- 
+[5.1] t.nucleo-subespacio <- t.subespacio-criterio
+[5.1] t.interseccion-subespacios <- t.subespacio-criterio
+[5.1] t.union-subespacio <- t.subespacio-criterio
+[5.2] t.generado-subespacio <- t.subespacio-criterio
+[5.2] t.dependencia-combinacion <- 
+[5.2] t.independencia-matriz <- t.nulidad
+[5.2] t.agregar-independiente <- t.dependencia-combinacion
+[5.3] t.mas-que-generadores <- t.homogeneo-libres, t.generado-subespacio
+[5.3] t.dimension-bien-definida <- t.mas-que-generadores
+[5.3] t.n-independientes-base <- t.dimension-bien-definida, t.agregar-independiente
+[5.3] t.dim-subespacio <- t.n-independientes-base, t.mas-que-generadores
+[5.4] t.coordenadas-unicas <- t.dependencia-combinacion
+[5.4] t.coordenadas-lineales <- t.coordenadas-unicas
+[5.4] t.matriz-cambio-base <- t.coordenadas-lineales
+[5.4] t.cambio-base-inversa <- t.matriz-cambio-base, t.mat-inversa-unica
+```
+<!-- ARBOL:FIN -->

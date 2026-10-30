@@ -24,7 +24,11 @@
       const cola = [];
       // cálculo: un ejercicio de aplicación por nivel, mezclados
       const porNivel = m.niveles.map(n => AC.planificador.disponibles(est, n).gens.filter(g => g.familia === 'aplicacion'));
-      rng.shuffle(porNivel.map((gs, i) => i)).forEach(i => { if (porNivel[i].length) cola.push({ fase: 'calculo', task: { tipo: 'gen', id: rng.pick(porNivel[i]).id, seed: sem() } }); });
+      const orden = rng.shuffle(porNivel.map((gs, i) => i)).filter(i => porNivel[i].length), usados = new Set();
+      for (let i = 0; i < 40 && cola.length < 6 && orden.length; i++) {
+        const gs = porNivel[orden[i % orden.length]].filter(g => !usados.has(g.id)); if (!gs.length) continue;
+        const g = rng.pick(gs); usados.add(g.id); cola.push({ fase: 'calculo', task: { tipo: 'gen', id: g.id, seed: sem() } });
+      }
       // estrategia: tres elecciones de método con enunciados distintos
       const vistos = new Set();
       for (let i = 0; i < 30 && vistos.size < 3; i++) {

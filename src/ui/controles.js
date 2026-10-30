@@ -107,6 +107,15 @@
         const c = ui.campoMate({ modo: 'expr', vars: e.vars, etiqueta: 'Tu expresión', onCambio: api.cambio });
         return { el: c.el, leer: c.valor, marcar() {}, bloquear: c.bloquear, foco: () => c.input.focus() };
       }
+      case 'complejo': {
+        const c = ui.campoMate({ modo: 'expr', vars: ['i'], etiqueta: 'Tu número complejo', onCambio: api.cambio });
+        return { el: c.el, leer: c.valor, marcar() {}, bloquear: c.bloquear, foco: () => c.input.focus() };
+      }
+      case 'tupla': {
+        const cs = e.campos.map((nom, i) => ui.campoMate({ modo: 'num', etiqueta: nom, onCambio: api.cambio }));
+        const el = h('div', { class: 'tupla' }, e.campos.map((nom, i) => h('div', { class: 'campo-tupla' }, h('label', { class: 'etiqueta' }, ui.mate(nom)), cs[i].el)));
+        return { el, leer: () => cs.map(c => c.valor()), marcar(res) { (res.detalle || []).forEach((ok, i) => { cs[i].input.classList.add(ok ? 'ok' : 'mal'); cs[i].el.appendChild(marca(ok)); }); }, bloquear() { cs.forEach(c => c.bloquear()); }, foco: () => cs[0].input.focus() };
+      }
       case 'conjunto': {
         const c = ui.campoMate({ modo: 'conjunto', etiqueta: 'Tu conjunto', onCambio: api.cambio });
         return { el: c.el, leer: c.valor, marcar() {}, bloquear: c.bloquear, foco: () => c.input.focus() };

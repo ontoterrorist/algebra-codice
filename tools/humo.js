@@ -29,7 +29,8 @@
       case 'matriz': { const ins = qa('.matriz-grilla input'); sol.forEach((f, i) => f.forEach((x, j) => { const el = ins[i * e.cols + j]; el.value = x; el.dispatchEvent(new Event('input', { bubbles: true })); })); break; }
       case 'tabla': { const bs = qa('.celda-vf'); bs.forEach((b, i) => { b.click(); if (sol[i] === false) b.click(); }); break; }
       case 'entero': case 'racional': { const i = q('input.campo-mate'); i.value = String(sol).replace('/', '/'); i.dispatchEvent(new Event('input', { bubbles: true })); break; }
-      case 'logica': case 'expr': case 'conjunto': { const i = q('input.campo-mate'); i.value = sol; i.dispatchEvent(new Event('input', { bubbles: true })); break; }
+      case 'tupla': { const ins = qa('input.campo-mate'); sol.forEach((x, i) => { ins[i].value = String(x); ins[i].dispatchEvent(new Event('input', { bubbles: true })); }); break; }
+      case 'logica': case 'expr': case 'conjunto': case 'complejo': { const i = q('input.campo-mate'); i.value = sol; i.dispatchEvent(new Event('input', { bubbles: true })); break; }
       case 'eleccion': qa('.opciones input')[sol].click(); break;
       case 'multiple': sol.forEach(i => qa('.opciones input')[i].click()); break;
       case 'procedimiento': pasosUI(raiz, e, sol); break;

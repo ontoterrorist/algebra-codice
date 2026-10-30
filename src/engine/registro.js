@@ -1,6 +1,6 @@
 /* Registro del contenido: habilidades, teoremas, generadores, demostraciones, niveles, mundos, referencias. */
 (function (AC) {
-  const reg = AC.reg = { habilidades: {}, teoremas: {}, generadores: {}, demos: {}, niveles: {}, mundos: [], refs: {}, bancos: {}, diagnosticos: {} };
+  const reg = AC.reg = { habilidades: {}, teoremas: {}, generadores: {}, demos: {}, niveles: {}, mundos: [], refs: {}, bancos: {}, diagnosticos: {}, jefes: {} };
 
   function unico(tabla, x, que) {
     if (!x || !x.id) throw new Error(que + ' sin id');
@@ -26,6 +26,7 @@
     ref(r) { return unico(reg.refs, r, 'referencia'); },
     diagnostico(d) { return unico(reg.diagnosticos, d, 'diagnóstico'); },
     banco(id, b) { reg.bancos[id] = b; },
+    jefe(mundo, def) { reg.jefes[mundo] = def; },
   };
 
   /* consultas */

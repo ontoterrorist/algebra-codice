@@ -80,6 +80,7 @@
         const tipo = r.ok ? 'ok' : r.parcial ? 'parcial' : 'mal';
         const titulo = r.ok ? 'Correcto' : r.parcial ? 'Casi' : 'Incorrecto';
         AC.sonido.tocar(tipo);
+        AC.companero.reaccionar(r.ok ? (pistas ? 'ok' : 'ok-sin-pistas') : r.parcial ? 'parcial' : 'mal');
         const banner = h('div', { class: 'banner ' + tipo, role: 'status' }, h('span', { class: 'ic', 'aria-hidden': 'true' }, r.ok ? '✓' : r.parcial ? '◐' : '✗'), h('strong', null, titulo + '. '), r.msg);
         res.appendChild(banner);
         if (r.firma && r.firma.mensaje) res.appendChild(h('p', { class: 'firma' }, h('strong', null, 'Error típico: '), r.firma.mensaje));
@@ -89,9 +90,9 @@
           res.appendChild(h('p', { class: 'xp-linea' }, x, pistas ? ' (con ' + pistas + ' pista' + (pistas > 1 ? 's' : '') + ')' : ' (sin pistas)'));
           AC.fx.particulas(x, 24);
         }
-        if (ef.teoremaGanado) { const t = reg.teoremas[ef.teoremaGanado]; AC.sonido.tocar('teorema'); res.appendChild(h('div', { class: 'logro-linea teorema' }, h('strong', null, 'Nuevo teorema en tu Códice: '), t.titulo, ' — ya puedes citarlo en otras demostraciones.')); AC.fx.particulas(banner, 40, ['#d4a847', '#f4e3a1']); }
+        if (ef.teoremaGanado) { const t = reg.teoremas[ef.teoremaGanado]; AC.sonido.tocar('teorema'); AC.companero.reaccionar('teorema'); res.appendChild(h('div', { class: 'logro-linea teorema' }, h('strong', null, 'Nuevo teorema en tu Códice: '), t.titulo, ' — ya puedes citarlo en otras demostraciones.')); AC.fx.particulas(banner, 40, ['#d4a847', '#f4e3a1']); }
         if (ef.escalonDespues !== undefined && ef.escalonAntes !== ef.escalonDespues) res.appendChild(h('p', { class: 'ayuda' }, 'Escalón del teorema: ' + (ef.escalonAntes + 1) + ' → ' + (ef.escalonDespues + 1) + ' de 3.'));
-        if (ef.dominioNuevo) { AC.sonido.tocar('nivel'); res.appendChild(h('div', { class: 'logro-linea nivel' }, h('strong', null, '¡Nivel ' + ef.dominioNuevo + ' dominado! '), 'Se abre el siguiente nivel cuando haya contenido.')); AC.fx.particulas(banner, 60); }
+        if (ef.dominioNuevo) { AC.sonido.tocar('nivel'); AC.companero.reaccionar('nivel'); res.appendChild(h('div', { class: 'logro-linea nivel' }, h('strong', null, '¡Nivel ' + ef.dominioNuevo + ' dominado! '), 'Se abre el siguiente nivel cuando haya contenido.')); AC.fx.particulas(banner, 60); }
         if (ef.subioNivel) res.appendChild(h('p', { class: 'logro-linea' }, 'Subiste al nivel de jugador ' + est().jugador.nivel + '.'));
         (ef.logros || []).forEach(l => res.appendChild(h('p', { class: 'logro-linea' }, h('span', { 'aria-hidden': 'true' }, '🏅 '), 'Logro: ', AC.logros.DEFS.find(d => d.id === l).nombre)));
         if (ef.rachaNueva) res.appendChild(h('p', { class: 'logro-linea' }, 'Racha: ' + est().jugador.racha.cuenta + ' día' + (est().jugador.racha.cuenta > 1 ? 's' : '') + '.'));
@@ -247,7 +248,7 @@
     const mid = Number(id) || 1, m = reg.mundos.find(x => x.id === mid), e = est();
     const vista = h('div', { class: 'vista' });
     if (!m || !m.jefe) { vista.append(h('h1', null, 'Jefe'), h('p', { class: 'construccion' }, 'En construcción.'), enlace('/mapa', 'Volver al mapa')); return vista; }
-    vista.append(h('p', { class: 'migas' }, enlace('/mapa', 'Mapa'), ' › Mundo ' + mid + ' › Jefe'), h('h1', null, m.jefe.titulo));
+    vista.append(h('p', { class: 'migas' }, enlace('/mapa', 'Mapa'), ' › Mundo ' + mid + ' › Jefe'), h('div', { class: 'cab-jefe' }, AC.retrato(m.jefe.id, m.jefe.titulo, 'grande'), h('h1', null, m.jefe.titulo)));
     const disp = AC.jefe.disponible(e, mid);
     if (!disp.ok) {
       ui.anadir(vista, [h('p', { class: 'lema' }, 'El jefe se abre cuando dominas todos los niveles del mundo y tienes todos sus teoremas en el Códice: sus pruebas exigen citarlos.'),
@@ -270,11 +271,12 @@
     }
     function combate() {
       ui.vaciar(caja);
-      const B = AC.jefe.nuevo(est(), mid); let cerrado = false, logros = [];
+      const B = AC.jefe.nuevo(est(), mid); let cerrado = false, logros = [], vidaPrev = 100, corazPrev = 3; AC.companero.reaccionar('jefe-inicio');
       const panel = h('div', { class: 'panel-jefe' });
       function pintar() {
         ui.vaciar(panel); const paso = AC.jefe.actual(B);
-        ui.anadir(panel, [h('div', { class: 'fila-jefe' }, h('strong', null, m.jefe.titulo), h('span', { class: 'chip' }, paso ? 'Fase: ' + AC.jefe.NOMBRE_FASE[paso.fase] : B.resultado === 'victoria' ? 'Vencido' : 'Derrota')),
+        const golpe = B.vida < vidaPrev, perdio = B.corazones < corazPrev; vidaPrev = B.vida; corazPrev = B.corazones;
+        ui.anadir(panel, [h('div', { class: 'fila-jefe' }, AC.retrato(m.jefe.id, m.jefe.titulo, (golpe ? 'herido ' : perdio ? 'burla ' : '') + (B.resultado === 'victoria' ? 'vencido' : '')), h('strong', null, m.jefe.titulo), h('span', { class: 'chip' }, paso ? 'Fase: ' + AC.jefe.NOMBRE_FASE[paso.fase] : B.resultado === 'victoria' ? 'Vencido' : 'Derrota')),
           h('div', { class: 'barra vida', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(B.vida), 'aria-label': 'Vida del jefe' }, h('div', { class: 'relleno', style: { width: B.vida + '%' } })),
           h('div', { class: 'fila-jefe' }, h('span', { class: 'etq' }, 'Vida del jefe: ' + B.vida + ' / 100'), h('span', { class: 'corazones', role: 'img', 'aria-label': B.corazones + ' de 3 corazones' }, [0, 1, 2].map(i => h('span', { class: i < B.corazones ? 'corazon' : 'corazon perdido', 'aria-hidden': 'true' }, i < B.corazones ? '♥' : '♡'))))]);
       }
@@ -288,10 +290,10 @@
         if (!cerrado && B.resultado) { cerrado = true; logros = AC.jefe.cerrar(est(), B, J.hoy()); J.guardar(); actualizarCabecera(); }
         pintar();
         const nombres = B.fallos.map(hid => (reg.habilidades[hid] || { nombre: hid }).nombre);
-        if (B.resultado === 'victoria') { AC.sonido.tocar('nivel'); AC.fx.particulas(panel, 70); }
+        if (B.resultado === 'victoria') { AC.sonido.tocar('nivel'); AC.fx.particulas(panel, 70); AC.companero.reaccionar('victoria'); } else if (B.resultado === 'derrota') AC.companero.reaccionar('derrota');
         return h('div', { class: 'tarjeta resumen' },
           B.resultado === 'victoria' ? h('div', null, h('h2', null, '¡Derrotaste a ' + m.jefe.titulo + '!'), h('p', null, 'Terminaste con ' + B.corazones + ' de 3 corazones' + (B.pistas === 0 ? ', sin usar pistas.' : ' y ' + B.pistas + ' pista' + (B.pistas > 1 ? 's' : '') + '.')), (logros || []).map(l => h('p', { class: 'logro-linea' }, '🏅 ', AC.logros.DEFS.find(d => d.id === l).nombre)))
-            : B.resultado === 'derrota' ? h('div', null, h('h2', null, 'El Guardián resiste'), h('p', null, 'Perdiste los tres corazones. Quedaban ' + B.vida + ' puntos de vida; nada se pierde.'), nombres.length ? h('p', null, 'Lo que falló: ', nombres.join(', '), '.') : null)
+            : B.resultado === 'derrota' ? h('div', null, h('h2', null, m.jefe.titulo + ' resiste'), h('p', null, 'Perdiste los tres corazones. Quedaban ' + B.vida + ' puntos de vida; nada se pierde.'), nombres.length ? h('p', null, 'Lo que falló: ', nombres.join(', '), '.') : null)
               : h('div', null, h('h2', null, 'Combate interrumpido'), h('p', null, 'Puedes empezar otro cuando quieras.')),
           h('div', { class: 'acciones' }, B.resultado === 'derrota' ? h('button', { type: 'button', class: 'primario', onclick: repasoDirigido }, 'Repaso dirigido') : null,
             h('button', { type: 'button', class: B.resultado === 'derrota' ? 'secundario' : 'primario', onclick: combate }, B.resultado === 'victoria' ? 'Enfrentarlo de nuevo' : 'Reintentar ahora'), enlace('/mapa', 'Mapa', 'boton secundario')));
@@ -451,7 +453,8 @@
     } });
     return h('div', { class: 'vista' }, h('h1', null, 'Ajustes'),
       h('fieldset', { class: 'tarjeta' }, h('legend', null, 'Tema'), h('div', { class: 'opciones fila' }, radio('oscuro', 'Nocturno'), radio('claro', 'Claro'), radio('auto', 'Según el sistema'))),
-      h('div', { class: 'tarjeta' }, h('label', { class: 'opcion' }, h('input', { type: 'checkbox', checked: a.silencio, onchange: ev => { a.silencio = ev.target.checked; guardar(); } }), h('span', { class: 'texto-opcion' }, 'Silenciar sonidos')),
+      h('div', { class: 'tarjeta' }, h('label', { class: 'opcion' }, h('input', { type: 'checkbox', checked: a.companero !== false, onchange: ev => { a.companero = ev.target.checked; guardar(); if (a.companero) AC.companero.saludar(); } }), h('span', { class: 'texto-opcion' }, 'Mostrar a mi compañero (el aprendiz de mago)')),
+        h('label', { class: 'opcion' }, h('input', { type: 'checkbox', checked: a.silencio, onchange: ev => { a.silencio = ev.target.checked; guardar(); } }), h('span', { class: 'texto-opcion' }, 'Silenciar sonidos')),
         h('label', { class: 'opcion' }, h('input', { type: 'checkbox', checked: a.reducirAnim, onchange: ev => { a.reducirAnim = ev.target.checked; guardar(); } }), h('span', { class: 'texto-opcion' }, 'Reducir animaciones (el sistema ya lo pide si tienes «reducir movimiento» activado)'))),
       h('div', { class: 'tarjeta' }, h('h2', null, 'Tu progreso'), h('p', { class: 'etq' }, AC.almacen.persistente ? 'Se guarda automáticamente en este navegador.' : '⚠ Este navegador no permite guardar: el progreso vive solo en memoria. Exporta antes de cerrar.'),
         h('div', { class: 'acciones' },

@@ -7,6 +7,7 @@ const M = require(path.join(SRC, 'manifest.js'));
 [...M.core, ...M.engine, ...M.content].forEach(f => require(path.join(SRC, f)));
 const AC = globalThis.AC, L = AC.logic, Rat = AC.Rat;
 const bot = require('./bot.js');
+const sinMatrices = t => t.replace(/\\begin\{[a-z*]+\}[\s\S]*?\\end\{[a-z*]+\}/g, ' ');
 const SEMILLAS = +process.argv[2] || 500;
 
 let malos = 0, comprobaciones = 0;
@@ -49,7 +50,7 @@ Object.values(T).forEach(t => {
 Object.values(T).forEach(t => t.requiere.forEach(r => { if (T[r]) chk(T[r].nivel <= t.nivel, t.id + ' requiere ' + r + ' de un nivel posterior'); }));
 // coherencia con docs/diseno.md (§11.4)
 const doc = fs.readFileSync(path.join(__dirname, '..', 'docs', 'diseno.md'), 'utf8');
-const bloque = doc.split('```text')[1].split('```')[0].trim().split(/\r?\n/);
+const bloque = doc.split('```text').slice(1).flatMap(b => b.split('```')[0].trim().split(/\r?\n/));
 const D = {};
 bloque.forEach(l => { const m = l.match(/^\[(\d\.\d)\] (\S+) <-\s*(.*)$/); if (m) D[m[2]] = { nivel: m[1], req: m[3] ? m[3].split(',').map(s => s.trim()).sort() : [] }; });
 Object.values(T).forEach(t => {
@@ -69,7 +70,7 @@ console.log('  ' + Object.keys(T).length + ' teoremas, sin ciclos; coherentes co
 /* ============ generadores de aplicación y práctica ============ */
 titulo('Generadores (' + SEMILLAS + ' semillas cada uno)');
 const CTX = { codice: ['t.demorgan-prop', 't.neg-implicacion'] };
-const conFirmas = ['tabla', 'entero', 'racional', 'logica', 'eleccion', 'multiple', 'conjunto', 'expr'];
+const conFirmas = ['tabla', 'entero', 'racional', 'logica', 'eleccion', 'multiple', 'conjunto', 'expr', 'complejo', 'tupla', 'matriz'];
 Object.values(AC.reg.generadores).forEach(g => {
   const claves = new Set(); let sinFirma = 0, nFirmas = 0, t0 = Date.now(), conAnsw = 0;
   for (let s = 0; s < SEMILLAS; s++) {
@@ -96,7 +97,7 @@ Object.values(AC.reg.generadores).forEach(g => {
     AC.errores.auditar(a).forEach(p => err(g.id + ': ' + p));
     // degeneradas y enunciado resuelto
     if (a.verificador.id === 'tabla-de-verdad') chk(new Set(a.verificador.args.esperado).size === 2, g.id + ': tabla constante');
-    (a.solucionTexto || []).forEach(sol => chk(!(/^-?\d+$/.test(sol) ? new RegExp('(^|\\D)' + sol + '(\\D|$)').test(a.enunciado) : a.enunciado.includes(sol)), g.id + ' semilla ' + s + ': el enunciado contiene la respuesta «' + sol + '»'));
+    (a.solucionTexto || []).forEach(sol => chk(!(/^-?\d+$/.test(sol) ? new RegExp('(^|\\D)' + sol + '(\\D|$)').test(sinMatrices(a.enunciado)) : a.enunciado.includes(sol)), g.id + ' semilla ' + s + ': el enunciado contiene la respuesta «' + sol + '»'));
     if (a.verificador.id === 'indice') chk(new Set(a.entrada.opciones).size === a.entrada.opciones.length, g.id + ': opciones repetidas');
     if (a.verificador.id === 'conjunto-indices') chk(a.verificador.args.esperado.length >= 1 && a.verificador.args.esperado.length < a.entrada.opciones.length, g.id + ': selección degenerada');
     conAnsw++;
@@ -182,6 +183,7 @@ Object.values(AC.reg.niveles).forEach(n => {
 });
 
 require('./tex.js')({ AC, SRC, CTX, err, chk, titulo });
+require('./escapes.js')({ SRC, err, chk, titulo });
 
 /* ============ motor de aprendizaje ============ */
 titulo('Motor de aprendizaje');
@@ -336,11 +338,12 @@ function jugar(estado, opciones) {
   const cal = AC.logros.calibracion(e); chk(cal.total > 0 && cal.error !== null, 'calibración calculable');
 })();
 
-(function () { // mundo completo y jefe
+(function () { // todos los mundos con jefe, en orden: niveles, jefe y desbloqueo del siguiente
   const e = AC.guardado.nuevo('2026-11-01'); J.usar(e);
-  chk(!AC.jefe.disponible(e, 1).ok, 'el jefe no está disponible al empezar');
-  chk(J.nivelAbierto('1.1') && !J.nivelAbierto('1.2'), 'solo el primer nivel está abierto al empezar');
-  const niveles = Object.keys(AC.reg.niveles);
+  Object.keys(AC.reg.jefes).map(Number).sort((x, y) => x - y).forEach(mid => {
+  chk(!AC.jefe.disponible(e, mid).ok, 'el jefe del mundo ' + mid + ' no está disponible al empezar');
+  const niveles = Object.keys(AC.reg.niveles).filter(n => AC.reg.niveles[n].mundo === mid);
+  chk(J.nivelAbierto(niveles[0]) && (niveles.length < 2 || !J.nivelAbierto(niveles[1])), 'en el mundo ' + mid + ' solo el primer nivel está abierto al empezar');
   let tareas = 0;
   niveles.forEach(n => {
     let i = 0;
@@ -362,13 +365,13 @@ function jugar(estado, opciones) {
     AC.reg.niveles[n].teoremas.forEach(t => chk(AC.codice.tiene(e, t), 'el teorema ' + t + ' debería estar en el Códice'));
     sumaDias(1);
   });
-  console.log('  mundo 1: ' + niveles.length + ' niveles dominados en ' + tareas + ' tareas perfectas; teoremas en el Códice: ' + AC.codice.ganados(e).length + ' de ' + Object.keys(AC.reg.teoremas).length + '.');
-  const d = AC.jefe.disponible(e, 1); chk(d.ok, 'con todo dominado el jefe está disponible');
+  console.log('  mundo ' + mid + ': ' + niveles.length + ' niveles dominados en ' + tareas + ' tareas perfectas; teoremas en el Códice: ' + AC.codice.ganados(e).length + ' de ' + Object.keys(AC.reg.teoremas).length + '.');
+  const d = AC.jefe.disponible(e, mid); chk(d.ok, 'con todo dominado el jefe está disponible');
   // victoria sin pistas
-  let B = AC.jefe.nuevo(e, 1);
+  let B = AC.jefe.nuevo(e, mid);
   chk(B.cola.length === 10 && B.cola.filter(x => x.fase === 'calculo').length === 6 && B.cola.filter(x => x.fase === 'estrategia').length === 3 && B.cola.filter(x => x.fase === 'demostracion').length === 1, 'el jefe tiene 6 + 3 + 1 pruebas');
   chk(AC.jefe.DANO.calculo * 6 + AC.jefe.DANO.estrategia * 3 + AC.jefe.DANO.demostracion === 100, 'el daño total suma 100');
-  const ventana = JSON.stringify(e.niveles['1.1'].ventana);
+  const ventana = JSON.stringify(e.niveles[niveles[0]].ventana);
   for (let paso; (paso = AC.jefe.actual(B)); ) {
     const inst = J.instanciar(paso.task), res = J.corregir(inst, bot.resolver(inst));
     chk(res.ok, 'el jefe: la solución de referencia de ' + inst.id + ' no se acepta');
@@ -376,13 +379,14 @@ function jugar(estado, opciones) {
     AC.jefe.resolver(B, res.ok, 0, inst.habilidades);
   }
   chk(B.resultado === 'victoria' && B.vida === 0 && B.corazones === 3, 'el jugador perfecto derrota al jefe sin perder corazones');
-  chk(JSON.stringify(e.niveles['1.1'].ventana) === ventana, 'los intentos del jefe no tocan la ventana de dominio');
+  chk(JSON.stringify(e.niveles[niveles[0]].ventana) === ventana, 'los intentos del jefe no tocan la ventana de dominio');
   const logros = AC.jefe.cerrar(e, B, J.hoy());
-  chk(e.mundos[1].jefeDerrotado && e.mundos[1].sinPistas && logros.includes('sin-pistas-jefe'), 'victoria sin pistas: jefe derrotado y logro «Sin pistas en un jefe»');
+  chk(e.mundos[mid].jefeDerrotado && e.mundos[mid].sinPistas && (logros.includes('sin-pistas-jefe') || !!e.logros['sin-pistas-jefe']), 'victoria sin pistas: jefe derrotado y logro «Sin pistas en un jefe»');
   // el jefe exige citar teoremas de niveles anteriores (la demostración es una construcción abierta)
-  AC.reg.mundos[0].jefe.demos.forEach(id => { const citados = new Set(AC.demo.resolver(AC.reg.demos[id], AC.rng('x')).lineas.map(l => l.just.ref).filter(x => AC.reg.teoremas[x])); chk(citados.size >= 2, id + ': la demostración del jefe debe citar al menos 2 teoremas de niveles anteriores (cita ' + citados.size + ')'); });
-  // derrota: tres fallos, repaso dirigido y reintento con otras instancias
-  B = AC.jefe.nuevo(e, 1); const primera = JSON.stringify(B.cola.map(x => x.task.seed));
+  Object.values(AC.reg.jefes).flatMap(j => j.demos).forEach(id => { const citados = new Set(AC.demo.resolver(AC.reg.demos[id], AC.rng('x')).lineas.map(l => l.just.ref).filter(x => AC.reg.teoremas[x])); chk(citados.size >= 2, id + ': la demostración del jefe debe citar al menos 2 teoremas de niveles anteriores (cita ' + citados.size + ')'); });
+  // derrota: tres fallos, repaso dirigido y reintento con otras instancias (solo en el mundo 1)
+  if (mid === 1) {
+  B = AC.jefe.nuevo(e, mid); const primera = JSON.stringify(B.cola.map(x => x.task.seed));
   let fallos = 0;
   for (let paso; (paso = AC.jefe.actual(B)); ) {
     const inst = J.instanciar(paso.task), mala = fallos < 3, res = J.corregir(inst, mala ? bot.equivocada(inst) : bot.resolver(inst));
@@ -393,13 +397,15 @@ function jugar(estado, opciones) {
   const dir = AC.jefe.repasoDirigido(e, B);
   chk(dir.length >= 3 && dir.length <= 5, 'el repaso dirigido tiene entre 3 y 5 ejercicios');
   chk(dir.every(t => { const inst = J.instanciar(t); return AC.ejercicio.corregir(inst, bot.resolver(inst)).ok; }), 'los ejercicios del repaso dirigido se pueden resolver');
-  const intentos = e.mundos[1].intentos; AC.jefe.cerrar(e, B, J.hoy());
-  chk(e.mundos[1].intentos === intentos + 1 && e.mundos[1].jefeDerrotado, 'una derrota no borra una victoria anterior');
-  chk(JSON.stringify(AC.jefe.nuevo(e, 1).cola.map(x => x.task.seed)) !== primera, 'el reintento usa instancias nuevas');
+  const intentos = e.mundos[mid].intentos; AC.jefe.cerrar(e, B, J.hoy());
+  chk(e.mundos[mid].intentos === intentos + 1 && e.mundos[mid].jefeDerrotado, 'una derrota no borra una victoria anterior');
+  chk(JSON.stringify(AC.jefe.nuevo(e, mid).cola.map(x => x.task.seed)) !== primera, 'el reintento usa instancias nuevas');
   // con pistas no hay logro de «sin pistas»
   const e2 = AC.guardado.nuevo('2026-11-01'); e2.mundos[1] = { jefeDerrotado: false, intentos: 0, sinPistas: false };
   const B2 = { pistas: 2, resultado: 'victoria', mundo: 1 }; const l2 = AC.jefe.cerrar(e2, B2, '2026-11-01');
   chk(e2.mundos[1].jefeDerrotado && !e2.mundos[1].sinPistas && !l2.includes('sin-pistas-jefe'), 'con pistas se derrota al jefe pero sin el logro');
+  }
+  });
 })();
 
 console.log('\n' + (malos ? '✗ ' + malos + ' fallo(s) en ' + comprobaciones + ' comprobaciones' : '✓ ' + comprobaciones + ' comprobaciones, 0 fallos'));

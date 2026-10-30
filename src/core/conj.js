@@ -68,6 +68,12 @@
     str: f => Object.keys(f).map(x => x + '↦' + f[x]).join(', '),
   };
 
-  AC.conj = { norm, parse, fmt, tex, eq, uni, inter, dif, comp, sub, rel, fun, tiene, cmp };
+  /* normaliza fichas: 'racional' (2/4 → 1/2) o 'complejo' (i+1 → 1+i); devuelve null si alguna no se entiende */
+  function normTokens(a, modo) {
+    if (!modo) return norm(a);
+    const f = modo === 'racional' ? t => { const r = AC.Rat.parse(String(t)); return r ? r.toString() : null; } : t => { const z = AC.cx.parse(String(t)); return z ? z.toString() : null; };
+    const out = a.map(f); return out.some(x => x === null) ? null : norm(out);
+  }
+  AC.conj = { normTokens, norm, parse, fmt, tex, eq, uni, inter, dif, comp, sub, rel, fun, tiene, cmp };
   if (typeof module !== 'undefined') module.exports = AC;
 })(globalThis.AC = globalThis.AC || {});
