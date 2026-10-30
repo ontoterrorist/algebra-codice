@@ -830,5 +830,21 @@ Este bloque lo escribe `node tools/arbol.js` a partir del contenido registrado y
 [6.4] t.traza-semejantes <- t.mat-producto-asoc
 [6.4] t.det-semejantes-2x2 <- t.det-producto-2x2, t.det-invertible-2x2
 [6.4] t.semejante-potencias <- t.mat-producto-asoc
+[7.1] t.propio-nucleo <- t.invertible-equivalencias, t.nucleo-subespacio
+[7.1] t.propios-distintos-independientes <- t.dependencia-combinacion
+[7.1] t.polinomio-caracteristico-2x2 <- t.vieta-cuadratica, t.det-invertible-2x2, t.propio-nucleo
+[7.1] t.propios-potencias <- t.mat-producto-asoc
+[7.2] t.diagonalizable-base <- t.semejanza-cambio-base, t.invertible-equivalencias
+[7.2] t.n-propios-distintos <- t.propios-distintos-independientes, t.n-independientes-base, t.diagonalizable-base
+[7.2] t.no-diagonalizable-defectiva <- t.diagonalizable-base
+[7.2] t.recurrencia-diagonal <- t.semejante-potencias
+[7.3] t.cauchy-schwarz <- t.cuadratica-formula
+[7.3] t.ortogonales-independientes <- 
+[7.3] t.proyeccion-ortogonal <- 
+[7.3] t.gram-schmidt <- t.proyeccion-ortogonal, t.ortogonales-independientes, t.agregar-independiente
+[7.4] t.simetrica-propios-ortogonales <- t.mat-transpuesta-producto
+[7.4] t.espectral-2x2 <- t.simetrica-propios-ortogonales, t.cuadratica-formula, t.polinomio-caracteristico-2x2
+[7.4] t.markov-estocastica <- t.invertible-equivalencias, t.ops-elementales
+[7.4] t.markov-conserva <- t.mat-producto-asoc
 ```
 <!-- ARBOL:FIN -->

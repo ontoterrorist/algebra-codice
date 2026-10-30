@@ -94,6 +94,27 @@
   const baseColumnas = A => { const { pivotes } = rref(A); return pivotes.map(c => A.map(f => f[c])); };
   const cambioBase = (B, C) => T(B.map(b => coordenadas(C, b)));
 
-  AC.mat = { independientes, combina, coordenadas, enGenerado, baseColumnas, cambioBase, q, de, dims, copia, id, ceros, igual, add, sub, esc, T, mul, pot, traza, colVec, aVec, rref, rango, inversa, det, menor, cofactor, adjunta, nucleo, resolver, evaluaSistema, fmt, tex, texN, texVec, texAum, texSistema, parsea };
+  /* polinomio característico por Faddeev-LeVerrier: coeficientes [c0..cn] de det(xI − A) */
+  function polCar(A) {
+    const n = A.length; let Mk = ceros(n, n); const c = Array.from({ length: n + 1 }, () => cero); c[n] = uno;
+    for (let k = 1; k <= n; k++) { Mk = add(mul(A, Mk), esc(id(n), c[n - k + 1])); c[n - k] = traza(mul(A, Mk)).neg().div(Rat.of(k)); }
+    return c;
+  }
+  /* valores propios racionales con su multiplicidad algebraica: [{v:Rat, m}] y lo que sobra del polinomio */
+  function valoresPropios(A) {
+    const P = AC.poly; let p = P.de(polCar(A)); const out = [];
+    for (let guard = 0; guard < 8 && P.grado(p) > 0; guard++) { const rs = P.raicesRacionales(p); if (!rs.length) break; const a = Rat.parse(rs[0]); let m = 0; for (;;) { const h = P.horner(p, a); if (!h.r.isZero()) break; p = h.q; m++; if (P.grado(p) < 1) break; } out.push({ v: a, m }); }
+    return { valores: out, resto: p };
+  }
+  const espacioPropio = (A, l) => nucleo(sub(A, esc(id(A.length), l)));
+  const diagonalizableQ = A => { const { valores, resto } = valoresPropios(A); return resto.length <= 1 && valores.every(x => espacioPropio(A, x.v).length === x.m); };
+  /* producto interno estándar */
+  const dot = (u, v) => u.reduce((s, x, i) => s.add(x.mul(v[i])), cero);
+  const proy = (v, u) => { const c = dot(v, u).div(dot(u, u)); return u.map(x => x.mul(c)); };
+  const gramSchmidt = vs => { const out = []; vs.forEach(v => { let w = v.slice(); out.push(out.reduce((acc, u) => { const p = proy(v, u); return acc.map((x, i) => x.sub(p[i])); }, w)); }); return out; };
+  /* ¿es esta matriz diagonalizante? P invertible y P⁻¹AP diagonal */
+  const diagonalizaCon = (A, P) => { const Pi = inversa(P); if (!Pi) return false; const D = mul(Pi, mul(A, P)); return D.every((f, i) => f.every((x, j) => i === j || x.isZero())); };
+
+  AC.mat = { polCar, valoresPropios, espacioPropio, diagonalizableQ, dot, proy, gramSchmidt, diagonalizaCon, independientes, combina, coordenadas, enGenerado, baseColumnas, cambioBase, q, de, dims, copia, id, ceros, igual, add, sub, esc, T, mul, pot, traza, colVec, aVec, rref, rango, inversa, det, menor, cofactor, adjunta, nucleo, resolver, evaluaSistema, fmt, tex, texN, texVec, texAum, texSistema, parsea };
   if (typeof module !== 'undefined') module.exports = AC;
 })(globalThis.AC = globalThis.AC || {});

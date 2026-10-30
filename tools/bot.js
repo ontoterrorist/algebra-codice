@@ -31,6 +31,7 @@ function resolver(inst) {
     case 'equivalente-expr': return inst.solucionExpr;
     case 'satisface-entero': { for (let n = a.rango[0]; n <= a.rango[1]; n++) if (!AC.afirmaciones[a.id](n, a)) return String(n); return null; }
     case 'matriz': return a.esperado.map(f => f.slice());
+    case 'matriz-diagonalizante': { const A = a.A.map(f => f.map(x => Rat0.parse(String(x)))); const vp = AC.mat.valoresPropios(A).valores, cols = vp.flatMap(x => AC.mat.espacioPropio(A, x.v)); return AC.mat.fmt(AC.mat.T(cols)); }
     case 'nucleo-vector': return AC.mat.fmt([AC.mat.nucleo(AC.mat.de(a.A.map(f => f.map(x => Rat0.parse(String(x))))))[0]])[0];
     case 'dependencia-lineal': { const V = a.vecs.map(f => f.map(x => Rat0.parse(String(x)))); return AC.mat.fmt([AC.mat.nucleo(AC.mat.T(V))[0]])[0]; }
     case 'base-nucleo': return AC.mat.fmt(AC.mat.nucleo(AC.mat.de(a.A.map(f => f.map(x => Rat0.parse(String(x)))))));
@@ -69,6 +70,7 @@ function equivocada(inst) {
     case 'equivalente-expr': return '1/7';
     case 'satisface-entero': { for (let n = a.rango[0]; n <= a.rango[1]; n++) if (AC.afirmaciones[a.id](n, a)) return String(n); return String(a.rango[0] - 1); }
     case 'matriz': return r.map((f, i) => f.map((x, j) => (i === 0 && j === 0 ? '12345' : x)));
+    case 'matriz-diagonalizante': return r.map(f => f.map(() => '0'));
     case 'nucleo-vector': case 'completa-base': return r.map(() => '0');
     case 'dependencia-lineal': return r.map(() => '0');
     case 'base-nucleo': { const jj = r[0].findIndex((_, j) => a.A.some(f => String(f[j]) !== '0')); return r.map((f, i) => f.map((x, j) => (i === 0 && j === jj ? String(Number(x) + 12345) : x))); }

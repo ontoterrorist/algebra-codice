@@ -185,6 +185,16 @@
     return { ok, msg: ok ? 'Correcto: añadir ese vector mantiene la independencia.' : 'Ese vector es combinación lineal de los dados: la lista seguiría siendo dependiente.' };
   };
 
+  verif['matriz-diagonalizante'] = (inst, resp, a) => {
+    if (!Array.isArray(resp) || resp.length !== a.n) return { ok: false, incompleta: true, msg: 'Completa la matriz.' };
+    const P = resp.map(f => aVecQ(f));
+    if (P.some(f => f.length !== a.n || f.some(x => !x))) return { ok: false, sintaxis: true, msg: 'Completa todas las entradas con números.' };
+    const A = aMatQ(a.A);
+    if (!AC.mat.inversa(P)) return { ok: false, msg: 'Las columnas de $P$ deben ser independientes: la matriz que escribiste no es invertible.' };
+    const ok = AC.mat.diagonalizaCon(A, P);
+    return { ok, msg: ok ? 'Correcto: con esa $P$, $P^{-1}AP$ es diagonal.' : 'Con esa $P$, $P^{-1}AP$ no es diagonal: las columnas deben ser vectores propios de $A$.' };
+  };
+
   function conjuntoNorm(modo) {
     return (inst, resp, a) => {
       const t = AC.conj.parse(resp);
