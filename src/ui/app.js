@@ -49,6 +49,7 @@
   function ruta() {
     const partes = (location.hash || '#/inicio').replace(/^#\/?/, '').split('/');
     const r = partes[0] || 'inicio', a = partes.slice(1).join('/');
+    document.body.dataset.vista = r; AC.companero.soltarPistas();
     const V = ui.vistas;
     const mapa = {
       inicio: () => V.inicio(), mapa: () => V.mapa(), nivel: () => V.nivel(a), leccion: () => V.leccion(a), practica: () => V.practica(a),

@@ -265,6 +265,45 @@ main { padding-bottom: 84px; }
 .retrato-jefe.mini { width: 40px; height: 40px; vertical-align: middle; margin-right: 8px; }
 .jefe-mapa { display: flex; align-items: center; flex-wrap: wrap; }
 
+/* ---- aire de videojuego: diálogo RPG, botones con relieve de píxel, barras de XP por segmentos ---- */
+.companero-btn { pointer-events: auto; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; position: relative; line-height: 0; border-radius: 12px; }
+.companero-btn:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+.companero-btn:hover .companero-img { transform: translateY(-3px); }
+.companero-btn.con-pista .companero-img { filter: drop-shadow(0 0 7px var(--gold)) drop-shadow(0 3px 3px rgba(0,0,0,.45)); }
+.companero-insignia { position: absolute; top: -4px; right: -6px; min-width: 22px; height: 22px; padding: 0 5px; background: var(--gold); color: var(--btn-ink); font: 700 .8rem/22px "Inter", system-ui, sans-serif; text-align: center; box-shadow: 0 -2px 0 0 var(--bg), 0 2px 0 0 var(--bg), -2px 0 0 0 var(--bg), 2px 0 0 0 var(--bg); }
+.companero-insignia[hidden] { display: none; }
+.companero-burbuja, .dialogo { position: relative; background: var(--panel); color: var(--ink); border: 0; border-radius: 0; text-align: left; box-shadow: 0 -3px 0 0 var(--gold), 0 3px 0 0 var(--gold), -3px 0 0 0 var(--gold), 3px 0 0 0 var(--gold); }
+.companero-burbuja { max-width: 250px; margin: 14px 8px 10px 0; padding: 10px 14px 16px; font-size: .88rem; line-height: 1.4; pointer-events: auto; cursor: pointer; }
+.companero-burbuja.pista { max-width: min(340px, 80vw); box-shadow: 0 -3px 0 0 var(--teal), 0 3px 0 0 var(--teal), -3px 0 0 0 var(--teal), 3px 0 0 0 var(--teal); }
+.cb-nombre { position: absolute; top: -17px; left: 8px; background: var(--gold); color: var(--btn-ink); font: 700 .74rem/1 "Inter", system-ui, sans-serif; padding: 4px 8px; }
+.cb-flecha { position: absolute; right: 8px; bottom: 3px; font-size: .62rem; color: var(--gold-ink); animation: parpadea 1s steps(1) infinite; }
+.cb-marca { display: block; color: var(--teal); margin-bottom: 3px; }
+.cb-pista { overflow-wrap: anywhere; }
+.cb-nota { margin-top: 5px; font-size: .74rem; color: var(--mute); }
+@keyframes parpadea { 50% { opacity: 0; } }
+.mision { display: flex; gap: 16px; align-items: flex-end; margin: 22px 0 20px; }
+.mision-avatar { width: 96px; height: 96px; image-rendering: pixelated; flex: none; filter: drop-shadow(0 3px 3px rgba(0,0,0,.45)); animation: respira 3.2s ease-in-out infinite; }
+.dialogo { flex: 1; margin: 18px 6px 6px 0; padding: 16px 18px 16px; }
+.dialogo p { margin: 4px 0 12px; font-size: 1.05rem; }
+.dialogo .boton { min-width: 190px; }
+body[data-vista="inicio"] .companero { display: none; }
+@media (max-width: 520px) { .mision { flex-direction: column; align-items: flex-start; } .mision-avatar { width: 72px; height: 72px; } .dialogo { width: calc(100% - 6px); } }
+.primario, .boton.primario, .secundario, .boton.secundario, .peligro { border-width: 2px; border-radius: 4px; font-weight: 700; margin-bottom: 4px; box-shadow: 0 4px 0 0 rgba(0,0,0,.5); transition: transform .06s, box-shadow .06s, filter .12s; }
+.primario:active:not(:disabled), .boton.primario:active, .secundario:active:not(:disabled), .boton.secundario:active, .peligro:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 0 rgba(0,0,0,.5); }
+.primario:disabled, .secundario:disabled { box-shadow: none; transform: translateY(2px); }
+.cab-barra { height: 12px; border: 2px solid var(--gold); border-radius: 2px; background: var(--bg); width: 56px; }
+.cab-relleno { background: repeating-linear-gradient(90deg, var(--gold) 0 6px, transparent 6px 8px); }
+.barra { height: 14px; border: 2px solid var(--gold); border-radius: 2px; background: var(--bg); }
+.barra .relleno { background: repeating-linear-gradient(90deg, var(--gold) 0 7px, transparent 7px 9px); }
+.barra.vida .relleno { background: repeating-linear-gradient(90deg, var(--mal) 0 7px, transparent 7px 9px); }
+.cab-nivel::before { content: "★ "; color: var(--gold); }
+.tarjeta, .estado-jugador > div, .panel-jefe, .banner { border-radius: 6px; }
+.enlace-tarjeta { transition: transform .08s; } .enlace-tarjeta:hover { transform: translateY(-2px); }
+.banner.ok { animation: sacude-ok .35s ease-out; }
+@keyframes sacude-ok { 0% { transform: scale(.97); } 60% { transform: scale(1.02); } 100% { transform: none; } }
+.reducir .companero-img, .reducir .mision-avatar, .reducir .cb-flecha, .reducir .banner.ok { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .mision-avatar, .cb-flecha, .banner.ok { animation: none !important; } }
+
 </style>
 </head>
 <body>
@@ -11905,14 +11944,16 @@ main { padding-bottom: 84px; }
 })(globalThis.AC = globalThis.AC || {});
 
 /* ui/companero.js */
-/* Compañero: un aprendiz de mago (PixelLab) que acompaña en un rincón, reacciona con frases breves y no estorba:
-   es decorativo (aria-hidden), no recibe clics, se oculta solo y se puede apagar en Ajustes. Los jefes tienen su retrato (AC.retrato). */
+/* Compañero: un aprendiz de mago (PixelLab) que acompaña en un rincón. Habla en un cuadro de diálogo tipo RPG, reacciona a tus respuestas
+   y, durante un ejercicio, te da las pistas: tócalo (o pulsa su botón) y te dice la siguiente. Las pistas siguen restando XP igual que los
+   botones de la página. Se puede apagar en Ajustes. Los jefes tienen su retrato (AC.retrato). */
 (function (AC) {
   const ui = AC.ui, h = ui.h;
   const FRASES = {
     saludo: ['Hola de nuevo. Un teorema a la vez.', 'Abramos el Códice: hoy toca demostrar algo.', 'Aquí estoy. Respira y empecemos.'],
     ok: ['¡Bien visto!', '¡Exacto!', 'Eso es.', 'Limpio y correcto.'],
     'ok-sin-pistas': ['¡Sin pistas! Eso es dominio.', 'Sin ayuda y perfecto.'],
+    'ok-con-pistas': ['Bien: las pistas están para usarse.', 'Correcto. Otro paso en el Códice.'],
     parcial: ['Casi: revisa el último paso.', 'Vas cerca; mira el mensaje.'],
     mal: ['Tranquilo: cada error típico enseña.', 'Revisa la solución con calma.', 'Equivocarse también es parte de la prueba.'],
     teorema: ['¡Un teorema nuevo para el Códice!'],
@@ -11920,27 +11961,42 @@ main { padding-bottom: 84px; }
     'jefe-inicio': ['Cita bien tus teoremas. Confío en ti.'],
     victoria: ['¡Lo lograste! Un hechicero menos.'],
     derrota: ['Nada se pierde. Repasa y vuelve.'],
+    ejercicio: ['Tócame si quieres una pista.', 'Si te atascas, pídeme una pista.'],
+    sin: ['Abre un ejercicio y te daré pistas. Toca el mapa para elegir una misión.'],
+    agotadas: ['Ya te di las tres pistas. Ahora te toca a ti.'],
+    atasco: ['¿Atascado? Tócame y te doy una pista.'],
   };
-  const ANIMO = { ok: 'alegre', 'ok-sin-pistas': 'celebra', teorema: 'celebra', nivel: 'celebra', victoria: 'celebra', mal: 'triste', derrota: 'triste', parcial: 'alegre' };
+  const ANIMO = { ok: 'alegre', 'ok-sin-pistas': 'celebra', 'ok-con-pistas': 'alegre', teorema: 'celebra', nivel: 'celebra', victoria: 'celebra', mal: 'triste', derrota: 'triste', parcial: 'alegre', pista: 'alegre' };
+  const ROTULO = ['orientación', 'idea clave', 'primer paso'];
   const rot = {};
   const elegir = k => { const l = FRASES[k] || []; rot[k] = (rot[k] === undefined ? Math.floor(Math.random() * l.length) : rot[k] + 1) % (l.length || 1); return l[rot[k]]; };
-  let caja = null, img = null, burb = null, tBurb = 0, tAnimo = 0;
+  let caja = null, img = null, burb = null, nombre = null, cuerpo = null, btn = null, insignia = null, tBurb = 0, tAnimo = 0, tTeclas = 0, tAtasco = 0, prov = null;
 
   const C = AC.companero = {
     activo() { const a = AC.juego.estado && AC.juego.estado.ajustes; return !a || a.companero !== false; },
     montar() {
       if (caja || !AC.personajes || !AC.personajes.companero) return;
       img = h('img', { class: 'companero-img', src: AC.personajes.companero, alt: '', width: 80, height: 80, draggable: 'false' });
-      burb = h('div', { class: 'companero-burbuja', hidden: true });
-      caja = h('div', { class: 'companero', 'aria-hidden': 'true' }, burb, img);
+      insignia = h('span', { class: 'companero-insignia', hidden: true, 'aria-hidden': 'true' }, '');
+      btn = h('button', { type: 'button', class: 'companero-btn', 'aria-label': 'Hablar con el aprendiz de mago', onclick: () => C.pedirPista() }, img, insignia);
+      nombre = h('span', { class: 'cb-nombre' }, 'Aprendiz');
+      cuerpo = h('div', { class: 'cb-texto' });
+      burb = h('div', { class: 'companero-burbuja', hidden: true, 'aria-hidden': 'true', onclick: () => { burb.hidden = true; } }, nombre, cuerpo, h('span', { class: 'cb-flecha' }, '▼'));
+      caja = h('div', { class: 'companero' }, burb, btn);
       document.body.appendChild(caja);
       C.refrescar();
     },
     refrescar() { if (caja) caja.hidden = !C.activo(); },
-    decir(texto, animo) {
-      if (!caja || !C.activo() || !texto) return;
-      burb.textContent = texto; burb.hidden = false;
-      clearTimeout(tBurb); tBurb = setTimeout(() => { burb.hidden = true; }, 4200);
+    /* escribe en el cuadro de diálogo: texto (con máquina de escribir) o un nodo ya armado (por ejemplo con KaTeX) */
+    decir(contenido, animo, opciones) {
+      if (!caja || !C.activo() || !contenido) return;
+      const op = opciones || {};
+      clearInterval(tTeclas); ui.vaciar(cuerpo); nombre.textContent = op.nombre || 'Aprendiz'; burb.classList.toggle('pista', !!op.pista); burb.hidden = false;
+      if (typeof contenido === 'string') {
+        if (AC.fx && AC.fx.reducir()) cuerpo.textContent = contenido;
+        else { let i = 0; tTeclas = setInterval(() => { i++; cuerpo.textContent = contenido.slice(0, i); if (i >= contenido.length) clearInterval(tTeclas); }, 18); }
+      } else cuerpo.appendChild(contenido);
+      clearTimeout(tBurb); tBurb = setTimeout(() => { burb.hidden = true; }, op.ms || 4600);
       if (animo) {
         img.classList.remove('alegre', 'triste', 'celebra'); void img.offsetWidth; img.classList.add(animo);
         clearTimeout(tAnimo); tAnimo = setTimeout(() => img.classList.remove('alegre', 'triste', 'celebra'), 1400);
@@ -11950,6 +12006,28 @@ main { padding-bottom: 84px; }
     saludar() {
       const e = AC.juego.estado, racha = e && e.jugador && e.jugador.racha && e.jugador.racha.cuenta;
       C.decir(racha >= 2 ? 'Racha de ' + racha + ' días. ¡Sigamos! 🔥' : elegir('saludo'), 'alegre');
+    },
+
+    /* ---- pistas ----  proveedor = { dar(): {n, nodo}|null, quedan(): número }; lo pone la vista del ejercicio */
+    enlazarPistas(proveedor) {
+      prov = proveedor; if (!btn) return;
+      C.actualizarPistas();
+      clearTimeout(tAtasco); tAtasco = setTimeout(() => { if (prov === proveedor && proveedor.quedan() === 3) C.decir(elegir('atasco'), 'alegre'); }, 50000);
+    },
+    soltarPistas() { prov = null; clearTimeout(tAtasco); if (btn) C.actualizarPistas(); },
+    actualizarPistas() {
+      if (!btn) return; const q = prov ? prov.quedan() : 0;
+      insignia.hidden = !prov || q <= 0; insignia.textContent = String(q); btn.classList.toggle('con-pista', !!prov && q > 0);
+      btn.setAttribute('aria-label', prov ? (q > 0 ? 'Pedirle una pista al aprendiz de mago (quedan ' + q + ')' : 'Ya no quedan pistas') : 'Hablar con el aprendiz de mago');
+    },
+    pedirPista() {
+      if (!caja) return;
+      if (!prov) { C.decir(elegir('sin'), 'alegre'); return; }
+      const r = prov.dar();
+      if (!r) { C.decir(elegir('agotadas'), 'alegre'); return; }
+      C.actualizarPistas(); clearTimeout(tAtasco);
+      const marca = h('strong', { class: 'cb-marca' }, 'Pista ' + r.n + ' de 3 · ' + ROTULO[r.n - 1]);
+      C.decir(h('div', null, marca, h('div', { class: 'cb-pista' }, r.nodo), r.n === 1 ? h('div', { class: 'cb-nota' }, 'Cada pista resta un poco de XP; nunca te bloquea.') : null), ANIMO.pista, { pista: true, nombre: 'Aprendiz', ms: 16000 });
     },
   };
 
@@ -12003,9 +12081,11 @@ main { padding-bottom: 84px; }
         if (hecho || pistas !== i) return;
         pistas++; txtPistas.appendChild(h('p', { class: 'pista-lin' }, h('strong', null, 'Pista ' + pistas + ': '), ui.mate(inst.pistas[i].replace(/^(Orientación|Idea clave|Primer paso): /, '$1: '))));
         botonesPista[i].disabled = true; if (botonesPista[i + 1]) botonesPista[i + 1].disabled = false;
-        ui.anunciar('Pista ' + pistas); AC.sonido.tocar('click');
+        ui.anunciar('Pista ' + pistas); AC.sonido.tocar('click'); AC.companero.actualizarPistas();
       } }, 'Pista ' + (i + 1) + [' · orientación', ' · idea clave', ' · primer paso'][i]));
       bPistas.append(h('span', { class: 'etq' }, 'Pistas (restan XP, nunca bloquean): '), ...botonesPista);
+      AC.companero.enlazarPistas({ dar: () => { if (hecho || pistas > 2) return null; const i = pistas; botonesPista[i].click(); return { n: i + 1, nodo: ui.mate(inst.pistas[i].replace(/^(Orientación|Idea clave|Primer paso): /, '').replace(/^./, c => c.toUpperCase())) }; }, quedan: () => (hecho ? 0 : 3 - pistas) });
+      if (R.n === 0 && S.contexto !== 'jefe') AC.companero.reaccionar('ejercicio');
       const bComprobar = h('button', { type: 'button', class: 'primario', onclick: comprobar }, 'Comprobar');
       const ctl = ui.crearControl(inst, { cambio() { if (hecho) return; bComprobar.disabled = false; } });
       const enunc = h('div', { class: 'enunciado' }, h('p', null, ui.mate(inst.enunciado)));
@@ -12029,7 +12109,7 @@ main { padding-bottom: 84px; }
         const r = J.corregir(inst, resp);
         if (r.incompleta || r.sintaxis) { ui.vaciar(res); res.appendChild(h('p', { class: 'aviso-in' }, h('span', { 'aria-hidden': 'true' }, '! '), r.msg)); ui.anunciar(r.msg); return; }
         if (pidioConfianza && confianza === null) { ui.vaciar(res); res.appendChild(h('p', { class: 'aviso-in' }, 'Antes de comprobar, elige tu nivel de confianza.')); return; }
-        hecho = true; bComprobar.disabled = true;
+        hecho = true; bComprobar.disabled = true; AC.companero.soltarPistas();
         const ef = J.registrar(inst, r, { pistas, ms: Date.now() - t0, confianza: pidioConfianza ? confianza : null, contexto: S.contexto });
         R.n++; if (r.ok) R.ok++; R.xp += ef.xp; (ef.logros || []).forEach(l => R.nuevos.push(l));
         ctl.marcar(r); ctl.bloquear();
@@ -12043,7 +12123,7 @@ main { padding-bottom: 84px; }
         const tipo = r.ok ? 'ok' : r.parcial ? 'parcial' : 'mal';
         const titulo = r.ok ? 'Correcto' : r.parcial ? 'Casi' : 'Incorrecto';
         AC.sonido.tocar(tipo);
-        AC.companero.reaccionar(r.ok ? (pistas ? 'ok' : 'ok-sin-pistas') : r.parcial ? 'parcial' : 'mal');
+        AC.companero.reaccionar(r.ok ? (pistas ? 'ok-con-pistas' : 'ok-sin-pistas') : r.parcial ? 'parcial' : 'mal');
         const banner = h('div', { class: 'banner ' + tipo, role: 'status' }, h('span', { class: 'ic', 'aria-hidden': 'true' }, r.ok ? '✓' : r.parcial ? '◐' : '✗'), h('strong', null, titulo + '. '), r.msg);
         res.appendChild(banner);
         if (r.firma && r.firma.mensaje) res.appendChild(h('p', { class: 'firma' }, h('strong', null, 'Error típico: '), r.firma.mensaje));
@@ -12114,9 +12194,19 @@ main { padding-bottom: 84px; }
     const jefeVencido = mJefe && e.mundos[mJefe.id] && e.mundos[mJefe.id].jefeDerrotado;
     const jefeAbierto = mJefe && AC.jefe.disponible(e, mJefe.id).ok;
     const t = (id, txt, desc, extra) => h('a', { href: '#' + id, class: 'tarjeta enlace-tarjeta' }, h('h3', null, txt), h('p', null, desc), extra || null);
+    const mision = () => {
+      const jefeListo = mJefe && jefeAbierto && !jefeVencido;
+      const txt = jefeListo ? '¡' + mJefe.jefe.titulo + ' te espera! Ya tienes los teoremas que necesitas. Cuando quieras, entra al combate.'
+        : nSeg ? 'Tu próxima misión: Nivel ' + nSeg + ' — ' + reg.niveles[nSeg].titulo + '. Si te atascas, tócame y te doy una pista.' : venc.length ? 'Tienes ' + venc.length + ' habilidad' + (venc.length > 1 ? 'es' : '') + ' por repasar. Un repaso rápido y seguimos.' : 'Todo lo disponible está dominado. Prueba el desafío del día.';
+      const dest = jefeListo ? '/jefe/' + mJefe.id : nSeg ? '/nivel/' + nSeg : venc.length ? '/repaso' : '/diario';
+      const etq = jefeListo ? 'Entrar al combate' : nSeg ? 'Empezar la misión' : venc.length ? 'Repasar' : 'Desafío del día';
+      return h('section', { class: 'mision', 'aria-label': 'Misión' }, AC.personajes && AC.personajes.companero ? h('img', { class: 'mision-avatar', src: AC.personajes.companero, alt: '', width: 96, height: 96, draggable: 'false' }) : null,
+        h('div', { class: 'dialogo' }, h('span', { class: 'cb-nombre' }, 'Aprendiz'), h('p', null, txt), h('a', { href: '#' + dest, class: 'boton primario' }, etq)));
+    };
     return h('div', { class: 'vista' },
       h('h1', null, 'El Códice de Álgebra'),
       h('p', { class: 'lema' }, 'Cada teorema que demuestras entra al Códice y se vuelve una herramienta para demostrar el siguiente.'),
+      mision(),
       h('div', { class: 'estado-jugador' },
         h('div', null, h('strong', null, 'Nivel ' + p.nivel), h('span', { class: 'etq' }, ' · ' + e.jugador.xp + ' XP'), barra(p.frac, 'Progreso hacia el nivel ' + (p.nivel + 1))),
         h('div', null, h('span', { 'aria-hidden': 'true' }, '🔥 '), h('strong', null, racha.cuenta + (racha.cuenta === 1 ? ' día' : ' días')), h('span', { class: 'etq' }, ' de racha' + (racha.gracia ? ' · ' + racha.gracia + ' ficha' + (racha.gracia > 1 ? 's' : '') + ' de gracia' : '')))),
@@ -12490,6 +12580,7 @@ main { padding-bottom: 84px; }
   function ruta() {
     const partes = (location.hash || '#/inicio').replace(/^#\/?/, '').split('/');
     const r = partes[0] || 'inicio', a = partes.slice(1).join('/');
+    document.body.dataset.vista = r; AC.companero.soltarPistas();
     const V = ui.vistas;
     const mapa = {
       inicio: () => V.inicio(), mapa: () => V.mapa(), nivel: () => V.nivel(a), leccion: () => V.leccion(a), practica: () => V.practica(a),

@@ -40,9 +40,11 @@
         if (hecho || pistas !== i) return;
         pistas++; txtPistas.appendChild(h('p', { class: 'pista-lin' }, h('strong', null, 'Pista ' + pistas + ': '), ui.mate(inst.pistas[i].replace(/^(Orientación|Idea clave|Primer paso): /, '$1: '))));
         botonesPista[i].disabled = true; if (botonesPista[i + 1]) botonesPista[i + 1].disabled = false;
-        ui.anunciar('Pista ' + pistas); AC.sonido.tocar('click');
+        ui.anunciar('Pista ' + pistas); AC.sonido.tocar('click'); AC.companero.actualizarPistas();
       } }, 'Pista ' + (i + 1) + [' · orientación', ' · idea clave', ' · primer paso'][i]));
       bPistas.append(h('span', { class: 'etq' }, 'Pistas (restan XP, nunca bloquean): '), ...botonesPista);
+      AC.companero.enlazarPistas({ dar: () => { if (hecho || pistas > 2) return null; const i = pistas; botonesPista[i].click(); return { n: i + 1, nodo: ui.mate(inst.pistas[i].replace(/^(Orientación|Idea clave|Primer paso): /, '').replace(/^./, c => c.toUpperCase())) }; }, quedan: () => (hecho ? 0 : 3 - pistas) });
+      if (R.n === 0 && S.contexto !== 'jefe') AC.companero.reaccionar('ejercicio');
       const bComprobar = h('button', { type: 'button', class: 'primario', onclick: comprobar }, 'Comprobar');
       const ctl = ui.crearControl(inst, { cambio() { if (hecho) return; bComprobar.disabled = false; } });
       const enunc = h('div', { class: 'enunciado' }, h('p', null, ui.mate(inst.enunciado)));
@@ -66,7 +68,7 @@
         const r = J.corregir(inst, resp);
         if (r.incompleta || r.sintaxis) { ui.vaciar(res); res.appendChild(h('p', { class: 'aviso-in' }, h('span', { 'aria-hidden': 'true' }, '! '), r.msg)); ui.anunciar(r.msg); return; }
         if (pidioConfianza && confianza === null) { ui.vaciar(res); res.appendChild(h('p', { class: 'aviso-in' }, 'Antes de comprobar, elige tu nivel de confianza.')); return; }
-        hecho = true; bComprobar.disabled = true;
+        hecho = true; bComprobar.disabled = true; AC.companero.soltarPistas();
         const ef = J.registrar(inst, r, { pistas, ms: Date.now() - t0, confianza: pidioConfianza ? confianza : null, contexto: S.contexto });
         R.n++; if (r.ok) R.ok++; R.xp += ef.xp; (ef.logros || []).forEach(l => R.nuevos.push(l));
         ctl.marcar(r); ctl.bloquear();
@@ -80,7 +82,7 @@
         const tipo = r.ok ? 'ok' : r.parcial ? 'parcial' : 'mal';
         const titulo = r.ok ? 'Correcto' : r.parcial ? 'Casi' : 'Incorrecto';
         AC.sonido.tocar(tipo);
-        AC.companero.reaccionar(r.ok ? (pistas ? 'ok' : 'ok-sin-pistas') : r.parcial ? 'parcial' : 'mal');
+        AC.companero.reaccionar(r.ok ? (pistas ? 'ok-con-pistas' : 'ok-sin-pistas') : r.parcial ? 'parcial' : 'mal');
         const banner = h('div', { class: 'banner ' + tipo, role: 'status' }, h('span', { class: 'ic', 'aria-hidden': 'true' }, r.ok ? '✓' : r.parcial ? '◐' : '✗'), h('strong', null, titulo + '. '), r.msg);
         res.appendChild(banner);
         if (r.firma && r.firma.mensaje) res.appendChild(h('p', { class: 'firma' }, h('strong', null, 'Error típico: '), r.firma.mensaje));
@@ -151,9 +153,19 @@
     const jefeVencido = mJefe && e.mundos[mJefe.id] && e.mundos[mJefe.id].jefeDerrotado;
     const jefeAbierto = mJefe && AC.jefe.disponible(e, mJefe.id).ok;
     const t = (id, txt, desc, extra) => h('a', { href: '#' + id, class: 'tarjeta enlace-tarjeta' }, h('h3', null, txt), h('p', null, desc), extra || null);
+    const mision = () => {
+      const jefeListo = mJefe && jefeAbierto && !jefeVencido;
+      const txt = jefeListo ? '¡' + mJefe.jefe.titulo + ' te espera! Ya tienes los teoremas que necesitas. Cuando quieras, entra al combate.'
+        : nSeg ? 'Tu próxima misión: Nivel ' + nSeg + ' — ' + reg.niveles[nSeg].titulo + '. Si te atascas, tócame y te doy una pista.' : venc.length ? 'Tienes ' + venc.length + ' habilidad' + (venc.length > 1 ? 'es' : '') + ' por repasar. Un repaso rápido y seguimos.' : 'Todo lo disponible está dominado. Prueba el desafío del día.';
+      const dest = jefeListo ? '/jefe/' + mJefe.id : nSeg ? '/nivel/' + nSeg : venc.length ? '/repaso' : '/diario';
+      const etq = jefeListo ? 'Entrar al combate' : nSeg ? 'Empezar la misión' : venc.length ? 'Repasar' : 'Desafío del día';
+      return h('section', { class: 'mision', 'aria-label': 'Misión' }, AC.personajes && AC.personajes.companero ? h('img', { class: 'mision-avatar', src: AC.personajes.companero, alt: '', width: 96, height: 96, draggable: 'false' }) : null,
+        h('div', { class: 'dialogo' }, h('span', { class: 'cb-nombre' }, 'Aprendiz'), h('p', null, txt), h('a', { href: '#' + dest, class: 'boton primario' }, etq)));
+    };
     return h('div', { class: 'vista' },
       h('h1', null, 'El Códice de Álgebra'),
       h('p', { class: 'lema' }, 'Cada teorema que demuestras entra al Códice y se vuelve una herramienta para demostrar el siguiente.'),
+      mision(),
       h('div', { class: 'estado-jugador' },
         h('div', null, h('strong', null, 'Nivel ' + p.nivel), h('span', { class: 'etq' }, ' · ' + e.jugador.xp + ' XP'), barra(p.frac, 'Progreso hacia el nivel ' + (p.nivel + 1))),
         h('div', null, h('span', { 'aria-hidden': 'true' }, '🔥 '), h('strong', null, racha.cuenta + (racha.cuenta === 1 ? ' día' : ' días')), h('span', { class: 'etq' }, ' de racha' + (racha.gracia ? ' · ' + racha.gracia + ' ficha' + (racha.gracia > 1 ? 's' : '') + ' de gracia' : '')))),

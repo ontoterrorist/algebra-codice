@@ -249,3 +249,42 @@ main { padding-bottom: 84px; }
 @media (prefers-reduced-motion: reduce) { .companero-img, .retrato-jefe, .companero-burbuja { animation: none !important; } }
 .retrato-jefe.mini { width: 40px; height: 40px; vertical-align: middle; margin-right: 8px; }
 .jefe-mapa { display: flex; align-items: center; flex-wrap: wrap; }
+
+/* ---- aire de videojuego: diálogo RPG, botones con relieve de píxel, barras de XP por segmentos ---- */
+.companero-btn { pointer-events: auto; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; position: relative; line-height: 0; border-radius: 12px; }
+.companero-btn:focus-visible { outline: 3px solid var(--teal); outline-offset: 3px; }
+.companero-btn:hover .companero-img { transform: translateY(-3px); }
+.companero-btn.con-pista .companero-img { filter: drop-shadow(0 0 7px var(--gold)) drop-shadow(0 3px 3px rgba(0,0,0,.45)); }
+.companero-insignia { position: absolute; top: -4px; right: -6px; min-width: 22px; height: 22px; padding: 0 5px; background: var(--gold); color: var(--btn-ink); font: 700 .8rem/22px "Inter", system-ui, sans-serif; text-align: center; box-shadow: 0 -2px 0 0 var(--bg), 0 2px 0 0 var(--bg), -2px 0 0 0 var(--bg), 2px 0 0 0 var(--bg); }
+.companero-insignia[hidden] { display: none; }
+.companero-burbuja, .dialogo { position: relative; background: var(--panel); color: var(--ink); border: 0; border-radius: 0; text-align: left; box-shadow: 0 -3px 0 0 var(--gold), 0 3px 0 0 var(--gold), -3px 0 0 0 var(--gold), 3px 0 0 0 var(--gold); }
+.companero-burbuja { max-width: 250px; margin: 14px 8px 10px 0; padding: 10px 14px 16px; font-size: .88rem; line-height: 1.4; pointer-events: auto; cursor: pointer; }
+.companero-burbuja.pista { max-width: min(340px, 80vw); box-shadow: 0 -3px 0 0 var(--teal), 0 3px 0 0 var(--teal), -3px 0 0 0 var(--teal), 3px 0 0 0 var(--teal); }
+.cb-nombre { position: absolute; top: -17px; left: 8px; background: var(--gold); color: var(--btn-ink); font: 700 .74rem/1 "Inter", system-ui, sans-serif; padding: 4px 8px; }
+.cb-flecha { position: absolute; right: 8px; bottom: 3px; font-size: .62rem; color: var(--gold-ink); animation: parpadea 1s steps(1) infinite; }
+.cb-marca { display: block; color: var(--teal); margin-bottom: 3px; }
+.cb-pista { overflow-wrap: anywhere; }
+.cb-nota { margin-top: 5px; font-size: .74rem; color: var(--mute); }
+@keyframes parpadea { 50% { opacity: 0; } }
+.mision { display: flex; gap: 16px; align-items: flex-end; margin: 22px 0 20px; }
+.mision-avatar { width: 96px; height: 96px; image-rendering: pixelated; flex: none; filter: drop-shadow(0 3px 3px rgba(0,0,0,.45)); animation: respira 3.2s ease-in-out infinite; }
+.dialogo { flex: 1; margin: 18px 6px 6px 0; padding: 16px 18px 16px; }
+.dialogo p { margin: 4px 0 12px; font-size: 1.05rem; }
+.dialogo .boton { min-width: 190px; }
+body[data-vista="inicio"] .companero { display: none; }
+@media (max-width: 520px) { .mision { flex-direction: column; align-items: flex-start; } .mision-avatar { width: 72px; height: 72px; } .dialogo { width: calc(100% - 6px); } }
+.primario, .boton.primario, .secundario, .boton.secundario, .peligro { border-width: 2px; border-radius: 4px; font-weight: 700; margin-bottom: 4px; box-shadow: 0 4px 0 0 rgba(0,0,0,.5); transition: transform .06s, box-shadow .06s, filter .12s; }
+.primario:active:not(:disabled), .boton.primario:active, .secundario:active:not(:disabled), .boton.secundario:active, .peligro:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 0 rgba(0,0,0,.5); }
+.primario:disabled, .secundario:disabled { box-shadow: none; transform: translateY(2px); }
+.cab-barra { height: 12px; border: 2px solid var(--gold); border-radius: 2px; background: var(--bg); width: 56px; }
+.cab-relleno { background: repeating-linear-gradient(90deg, var(--gold) 0 6px, transparent 6px 8px); }
+.barra { height: 14px; border: 2px solid var(--gold); border-radius: 2px; background: var(--bg); }
+.barra .relleno { background: repeating-linear-gradient(90deg, var(--gold) 0 7px, transparent 7px 9px); }
+.barra.vida .relleno { background: repeating-linear-gradient(90deg, var(--mal) 0 7px, transparent 7px 9px); }
+.cab-nivel::before { content: "★ "; color: var(--gold); }
+.tarjeta, .estado-jugador > div, .panel-jefe, .banner { border-radius: 6px; }
+.enlace-tarjeta { transition: transform .08s; } .enlace-tarjeta:hover { transform: translateY(-2px); }
+.banner.ok { animation: sacude-ok .35s ease-out; }
+@keyframes sacude-ok { 0% { transform: scale(.97); } 60% { transform: scale(1.02); } 100% { transform: none; } }
+.reducir .companero-img, .reducir .mision-avatar, .reducir .cb-flecha, .reducir .banner.ok { animation: none !important; }
+@media (prefers-reduced-motion: reduce) { .mision-avatar, .cb-flecha, .banner.ok { animation: none !important; } }
