@@ -846,5 +846,21 @@ Este bloque lo escribe `node tools/arbol.js` a partir del contenido registrado y
 [7.4] t.espectral-2x2 <- t.simetrica-propios-ortogonales, t.cuadratica-formula, t.polinomio-caracteristico-2x2
 [7.4] t.markov-estocastica <- t.invertible-equivalencias, t.ops-elementales
 [7.4] t.markov-conserva <- t.mat-producto-asoc
+[8.1] t.grupo-unicidad <- 
+[8.1] t.grupo-cancelacion <- t.grupo-unicidad
+[8.1] t.grupo-inverso-producto <- t.grupo-unicidad
+[8.1] t.unidades-grupo <- t.inverso-modular, t.cong-operaciones
+[8.2] t.subgrupo-criterio <- t.grupo-unicidad, t.grupo-inverso-producto
+[8.2] t.clases-laterales <- t.grupo-cancelacion, t.equiv-particion
+[8.2] t.lagrange <- t.clases-laterales
+[8.2] t.orden-divide <- t.lagrange, t.subgrupo-criterio
+[8.3] t.hom-identidad-inverso <- t.grupo-cancelacion, t.grupo-unicidad
+[8.3] t.nucleo-subgrupo <- t.hom-identidad-inverso, t.subgrupo-criterio
+[8.3] t.orden-ker-im <- t.lagrange, t.nucleo-subgrupo
+[8.3] t.orden-hom-divide <- t.orden-ker-im, t.lagrange
+[8.4] t.anillo-cero-producto <- 
+[8.4] t.unidad-no-divisor-cero <- t.anillo-cero-producto
+[8.4] t.zn-cuerpo <- t.lema-euclides, t.unidades-grupo, t.unidad-no-divisor-cero
+[8.4] t.dominio-finito-cuerpo <- t.anillo-cero-producto
 ```
 <!-- ARBOL:FIN -->
