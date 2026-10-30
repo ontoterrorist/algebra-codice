@@ -814,5 +814,21 @@ Este bloque lo escribe `node tools/arbol.js` a partir del contenido registrado y
 [5.4] t.coordenadas-lineales <- t.coordenadas-unicas
 [5.4] t.matriz-cambio-base <- t.coordenadas-lineales
 [5.4] t.cambio-base-inversa <- t.matriz-cambio-base, t.mat-inversa-unica
+[6.1] t.lineal-cero-opuesto <- 
+[6.1] t.criterio-lineal <- 
+[6.1] t.lineal-determinada-base <- t.coordenadas-unicas, t.coordenadas-lineales
+[6.1] t.composicion-lineal <- t.criterio-lineal
+[6.2] t.nucleo-imagen-subespacios <- t.subespacio-criterio, t.lineal-cero-opuesto
+[6.2] t.inyectiva-nucleo <- t.lineal-cero-opuesto
+[6.2] t.rango-nulidad <- t.nucleo-imagen-subespacios, t.agregar-independiente, t.dimension-bien-definida
+[6.2] t.inversa-lineal <- t.criterio-lineal
+[6.3] t.matriz-asociada <- t.criterio-lineal, t.lineal-determinada-base
+[6.3] t.matriz-composicion <- t.matriz-asociada, t.mat-producto-asoc
+[6.3] t.matriz-inversa-transformacion <- t.matriz-composicion, t.mat-inversa-unica
+[6.3] t.matriz-respecto-bases <- t.coordenadas-lineales, t.matriz-cambio-base
+[6.4] t.semejanza-cambio-base <- t.matriz-respecto-bases, t.cambio-base-inversa, t.matriz-asociada
+[6.4] t.traza-semejantes <- t.mat-producto-asoc
+[6.4] t.det-semejantes-2x2 <- t.det-producto-2x2, t.det-invertible-2x2
+[6.4] t.semejante-potencias <- t.mat-producto-asoc
 ```
 <!-- ARBOL:FIN -->
