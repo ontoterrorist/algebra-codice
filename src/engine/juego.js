@@ -19,12 +19,15 @@
 
     nivelEstado(id) { return J.estado.niveles[id] || (J.estado.niveles[id] = AC.dominio.nuevo()); },
 
-    /* ¿el nivel está abierto? el primero siempre; los demás al dominar el anterior */
+    /* ¿el nivel está abierto? el primero de cada mundo, al derrotar al jefe del mundo anterior; los demás, al dominar el anterior */
     nivelAbierto(id) {
-      const lista = Object.keys(AC.reg.niveles);
+      const def = AC.reg.niveles[id]; if (!def) return false;
+      const lista = Object.keys(AC.reg.niveles).filter(n => AC.reg.niveles[n].mundo === def.mundo);
       const i = lista.indexOf(id);
-      if (i <= 0) return i === 0;
-      return !!(J.estado.niveles[lista[i - 1]] && J.estado.niveles[lista[i - 1]].dominado);
+      if (i > 0) return !!(J.estado.niveles[lista[i - 1]] && J.estado.niveles[lista[i - 1]].dominado);
+      const prev = AC.reg.mundos.filter(m => m.niveles.length && m.id < def.mundo).pop();
+      if (!prev) return true;
+      return prev.jefe ? !!(J.estado.mundos[prev.id] && J.estado.mundos[prev.id].jefeDerrotado) : true;
     },
 
     /* racha diaria con fichas de gracia: un día cuenta tras una sesión de ≥5 ejercicios */
@@ -89,7 +92,7 @@
 
       /* XP */
       if (ok || res.parcial) {
-        ef.xp = AC.xp.calcular({ inst, pistas: meta.pistas, vencida, repetidas: eraDominado ? repetidas : 0, parcial: !ok && res.parcial, autoeval: res.autoeval });
+        ef.xp = AC.xp.calcular({ inst, pistas: meta.pistas, vencida, repetidas: eraDominado ? repetidas : 0, parcial: !ok && res.parcial, autoeval: res.autoeval, jefe: meta.contexto === 'jefe' });
         if (meta.contexto === 'diario') ef.xp = Math.round(ef.xp * 1.25);
         if (meta.autoexp && meta.autoexp.correcta) ef.xp += 3;
         est.jugador.xp += ef.xp;

@@ -51,7 +51,7 @@ R.generador({
 
 Qué comprueba `tools/test.js` por ti: que la misma semilla dé la misma instancia, que ≥ 20 semillas distintas den variantes distintas, que la respuesta correcta se acepte, que una respuesta mala se rechace, que cada firma se rechace **y se detecte** con su mensaje, y que el enunciado no traiga la respuesta.
 
-**Tipos de entrada** (`entrada.tipo` → verificador): `entero`/`racional` → `entero`/`racional`; `logica` → `equivalente-logica`; `eleccion` → `indice`; `multiple` → `conjunto-indices`; `tabla` → `tabla-de-verdad`; `procedimiento` → `ruta-valida`; `asignacion` → `asignacion`; `vf` → `vf-justificado`; `matriz` → `matriz`. Para uno nuevo, agrega su verificador en `src/engine/verificar.js`, su firma de detección en `src/engine/errores.js`, su control en `src/ui/controles.js` y su solución en `tools/bot.js`.
+**Tipos de entrada** (`entrada.tipo` → verificador): `entero`/`racional` → `entero`/`racional`; `logica` → `equivalente-logica`; `conjunto` → `igual-conjunto` (campo con llaves y comas); `expr` → `equivalente-expr` (expresión en las variables de `entrada.vars`); `entero` con `satisface-entero` para contraejemplos (se evalúa la afirmación registrada en `AC.afirmaciones`); `eleccion` → `indice`; `multiple` → `conjunto-indices`; `tabla` → `tabla-de-verdad`; `procedimiento` → `ruta-valida`; `asignacion` → `asignacion`; `vf` → `vf-justificado`; `matriz` → `matriz`. Para uno nuevo, agrega su verificador en `src/engine/verificar.js`, su firma de detección en `src/engine/errores.js`, su control en `src/ui/controles.js` y su solución en `tools/bot.js`.
 
 ## 2. Agregar una demostración
 
@@ -81,6 +81,10 @@ R.nivel({ id: '1.2', mundo: 1, titulo: 'Cuantificadores y conjuntos', tema: '…
 
 Además: quita el nivel de `pendientes` en `src/content/mundos.js` y agrégalo a `niveles`; si el nivel abre mundo o jefe nuevo, actualiza el árbol de `docs/diseno.md`. El siguiente nivel se abre al **dominar** el anterior (80 % en los últimos 10 intentos válidos y demostraciones correctas sobre 2 enunciados distintos).
 
-## 4. Qué revisar a mano
+## 4. Agregar un jefe
+
+En `src/content/mundos.js`, el mundo lleva `jefe: { id, titulo, estrategia, demos }`: `estrategia` es el generador de elección de método que usa la fase 2 y `demos` es la lista de demostraciones (con `nivel: 'J1'` y `habilidades: []`, ver `src/content/w1/jefe.js`) de las que se sortea una para la fase 3. Cada demostración del jefe debe citar al menos **dos teoremas de niveles anteriores**; el test lo comprueba. El jefe se abre cuando todos los niveles del mundo están dominados y todos sus teoremas están en el Códice.
+
+## 5. Qué revisar a mano
 
 Las pruebas no certifican el contenido matemático. Tras agregar teoremas, corre `node tools/auditar.js`, lee `docs/revision-matematica.md` y anota tus dudas en el bloque «Dudas» (el script lo conserva).

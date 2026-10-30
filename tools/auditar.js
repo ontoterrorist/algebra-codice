@@ -11,14 +11,15 @@ let dudas = '\n_(sin dudas registradas)_\n';
 if (fs.existsSync(salida)) { const t = fs.readFileSync(salida, 'utf8'); const i = t.indexOf(A), j = t.indexOf(B); if (i >= 0 && j > i) dudas = t.slice(i + A.length, j); }
 
 const out = [];
-out.push('# Revisión matemática — Fase 1 (nivel 1.1, lógica proposicional)', '',
+out.push('# Revisión matemática — Fase 2 (Mundo 1 completo: niveles 1.1 a 1.6 y jefe)', '',
   'Generado por `node tools/auditar.js`. Las pruebas automáticas comprueban la **consistencia** (grafo sin ciclos, orden de referencia válido, solo se citan teoremas previos, los verificadores aceptan la solución de referencia y rechazan las firmas de error). **No certifican que el contenido matemático sea correcto**: eso es lo que te pido revisar aquí.', '',
   'Convenciones: ℕ incluye el 0; las hipótesis son siempre explícitas; en lógica proposicional se asumen las tablas de verdad de ¬, ∧, ∨ y las propiedades base citadas (conmutatividad, doble negación, transitividad de ≡, prueba condicional, división por casos).', '',
   '## Dudas', A, dudas.replace(/^\n?/, '\n'), B, '', '## Base y definiciones citables', '');
 Object.values(reg.refs).forEach(r => out.push('- `' + r.id + '` (' + r.tipo + '): ' + r.nombre));
 out.push('', '## Teoremas y demostraciones', '');
-Object.values(reg.teoremas).forEach(t => {
-  const d = Object.values(reg.demos).find(x => x.teorema === t.id);
+const items = Object.values(reg.teoremas).map(t => ({ t, d: Object.values(reg.demos).find(x => x.teorema === t.id) }))
+  .concat(Object.values(reg.demos).filter(x => !x.teorema).map(d => ({ t: { id: d.enunciadoId, titulo: 'Jefe: ' + d.id.replace('dem.jefe-', ''), nivel: d.nivel, enunciado: '(enunciado de la prueba del jefe; no entra al Códice)', requiere: d.requiere }, d })));
+items.forEach(({ t, d }) => {
   out.push('### ' + t.titulo + ' — `' + t.id + '` (nivel ' + t.nivel + ')', '', '**Enunciado.** ' + t.enunciado, '');
   const rng = AC.rng('auditoria|' + t.id), R = AC.demo.resolver(d, rng);
   out.push('**Hipótesis.** ' + d.hipotesis(R.p).join('; '), '', '**Depende de.** ' + (t.requiere.length ? t.requiere.map(r => '`' + r + '`').join(', ') : 'nada previo (solo definiciones y propiedades base)'), '');

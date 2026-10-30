@@ -49,7 +49,7 @@ Object.values(T).forEach(t => {
 Object.values(T).forEach(t => t.requiere.forEach(r => { if (T[r]) chk(T[r].nivel <= t.nivel, t.id + ' requiere ' + r + ' de un nivel posterior'); }));
 // coherencia con docs/diseno.md (§11.4)
 const doc = fs.readFileSync(path.join(__dirname, '..', 'docs', 'diseno.md'), 'utf8');
-const bloque = doc.split('```text')[1].split('```')[0].trim().split('\n');
+const bloque = doc.split('```text')[1].split('```')[0].trim().split(/\r?\n/);
 const D = {};
 bloque.forEach(l => { const m = l.match(/^\[(\d\.\d)\] (\S+) <-\s*(.*)$/); if (m) D[m[2]] = { nivel: m[1], req: m[3] ? m[3].split(',').map(s => s.trim()).sort() : [] }; });
 Object.values(T).forEach(t => {
@@ -69,7 +69,7 @@ console.log('  ' + Object.keys(T).length + ' teoremas, sin ciclos; coherentes co
 /* ============ generadores de aplicación y práctica ============ */
 titulo('Generadores (' + SEMILLAS + ' semillas cada uno)');
 const CTX = { codice: ['t.demorgan-prop', 't.neg-implicacion'] };
-const conFirmas = ['tabla', 'entero', 'racional', 'logica', 'eleccion', 'multiple'];
+const conFirmas = ['tabla', 'entero', 'racional', 'logica', 'eleccion', 'multiple', 'conjunto', 'expr'];
 Object.values(AC.reg.generadores).forEach(g => {
   const claves = new Set(); let sinFirma = 0, nFirmas = 0, t0 = Date.now(), conAnsw = 0;
   for (let s = 0; s < SEMILLAS; s++) {
@@ -96,7 +96,7 @@ Object.values(AC.reg.generadores).forEach(g => {
     AC.errores.auditar(a).forEach(p => err(g.id + ': ' + p));
     // degeneradas y enunciado resuelto
     if (a.verificador.id === 'tabla-de-verdad') chk(new Set(a.verificador.args.esperado).size === 2, g.id + ': tabla constante');
-    (a.solucionTexto || []).forEach(sol => chk(!a.enunciado.includes(sol), g.id + ' semilla ' + s + ': el enunciado contiene la respuesta «' + sol + '»'));
+    (a.solucionTexto || []).forEach(sol => chk(!(/^-?\d+$/.test(sol) ? new RegExp('(^|\\D)' + sol + '(\\D|$)').test(a.enunciado) : a.enunciado.includes(sol)), g.id + ' semilla ' + s + ': el enunciado contiene la respuesta «' + sol + '»'));
     if (a.verificador.id === 'indice') chk(new Set(a.entrada.opciones).size === a.entrada.opciones.length, g.id + ': opciones repetidas');
     if (a.verificador.id === 'conjunto-indices') chk(a.verificador.args.esperado.length >= 1 && a.verificador.args.esperado.length < a.entrada.opciones.length, g.id + ': selección degenerada');
     conAnsw++;
@@ -170,13 +170,18 @@ Object.values(AC.reg.demos).forEach(d => {
   }
   chk(visto, 'el uso circular del teorema que se demuestra debería detectarse');
 })();
-// cuotas del nivel 1.1
-const c11 = AC.catalogo.delNivel('1.1');
-chk(c11.gens.filter(g => g.familia === 'aplicacion').length >= 4, 'el nivel 1.1 necesita ≥4 generadores de aplicación');
-const enun = new Set(c11.demos.map(d => d.enunciadoId)); c11.gens.filter(g => g.familia === 'demostracion').forEach(g => enun.add(g.id));
-chk(enun.size >= 4, 'el nivel 1.1 necesita demostraciones sobre ≥4 enunciados');
-chk(c11.demos.length * MODOS.length >= 8, 'el nivel 1.1 necesita ≥8 ejercicios de demostración');
-console.log('  nivel 1.1: ' + c11.gens.filter(g => g.familia === 'aplicacion').length + ' generadores de aplicación, ' + c11.demos.length + ' demostraciones × ' + MODOS.length + ' modos, ' + c11.gens.filter(g => g.familia === 'demostracion').length + ' generadores de V/F y contraejemplo.');
+// cuotas de cada nivel: ≥4 generadores de aplicación, demostraciones sobre ≥4 enunciados y ≥8 ejercicios de demostración
+Object.values(AC.reg.niveles).forEach(n => {
+  const c = AC.catalogo.delNivel(n.id), app = c.gens.filter(g => g.familia === 'aplicacion'), dg = c.gens.filter(g => g.familia === 'demostracion');
+  const enun = new Set(c.demos.map(d => d.enunciadoId)); dg.forEach(g => enun.add(g.id));
+  chk(app.length >= 4, 'el nivel ' + n.id + ' necesita ≥4 generadores de aplicación (tiene ' + app.length + ')');
+  chk(enun.size >= 4, 'el nivel ' + n.id + ' necesita demostraciones sobre ≥4 enunciados (tiene ' + enun.size + ')');
+  chk(c.demos.length * MODOS.length + dg.length >= 8, 'el nivel ' + n.id + ' necesita ≥8 ejercicios de demostración');
+  chk(n.leccion && n.leccion.definiciones.length >= 3 && n.leccion.ejemplo.pasos.length >= 2 && AC.reg.teoremas[n.leccion.teorema], 'el nivel ' + n.id + ' necesita mini-lección completa');
+  console.log('  nivel ' + n.id + ': ' + app.length + ' generadores de aplicación, ' + c.demos.length + ' demostraciones × ' + MODOS.length + ' modos, ' + dg.length + ' de V/F y contraejemplo, ' + n.teoremas.length + ' teoremas.');
+});
+
+require('./tex.js')({ AC, SRC, CTX, err, chk, titulo });
 
 /* ============ motor de aprendizaje ============ */
 titulo('Motor de aprendizaje');
@@ -329,6 +334,72 @@ function jugar(estado, opciones) {
   J.registrar(inst, J.corregir(inst, bot.resolver(inst)), { pistas: 0, contexto: 'reloj' });
   chk(JSON.stringify(e.niveles['1.1'].ventana) === antes, 'contrarreloj no mueve la ventana de dominio');
   const cal = AC.logros.calibracion(e); chk(cal.total > 0 && cal.error !== null, 'calibración calculable');
+})();
+
+(function () { // mundo completo y jefe
+  const e = AC.guardado.nuevo('2026-11-01'); J.usar(e);
+  chk(!AC.jefe.disponible(e, 1).ok, 'el jefe no está disponible al empezar');
+  chk(J.nivelAbierto('1.1') && !J.nivelAbierto('1.2'), 'solo el primer nivel está abierto al empezar');
+  const niveles = Object.keys(AC.reg.niveles);
+  let tareas = 0;
+  niveles.forEach(n => {
+    let i = 0;
+    while (!(e.niveles[n] && e.niveles[n].dominado) && i < 200) {
+      const t = AC.planificador.siguiente(e, { nivel: n, hoy: J.hoy() });
+      const def = t.tipo === 'gen' ? AC.reg.generadores[t.id] : AC.reg.demos[t.id];
+      if (!AC.codice.cumple(e, def.requiere)) err('el planificador ofreció algo no disponible en ' + n);
+      const inst = J.instanciar(t), res = J.corregir(inst, bot.resolver(inst));
+      if (!res.ok) { err(n + ': el bot falló ' + inst.id + ' ' + (inst.modo || '') + ': ' + res.msg); break; }
+      J.registrar(inst, res, { pistas: 0, ms: 3000, contexto: 'practica' }); i++; tareas++;
+    }
+    chk(e.niveles[n] && e.niveles[n].dominado, 'el jugador perfecto debería dominar el nivel ' + n);
+    // seguir practicando el nivel debe acabar entregando los teoremas que falten (la demostración «de ceremonia» tiene prioridad)
+    for (let j = 0; j < 80 && AC.reg.niveles[n].teoremas.some(t => !AC.codice.tiene(e, t)); j++) {
+      const t = AC.planificador.siguiente(e, { nivel: n, hoy: J.hoy() }), inst = J.instanciar(t), res = J.corregir(inst, bot.resolver(inst));
+      J.registrar(inst, res, { pistas: 0, ms: 3000, contexto: 'practica' }); tareas++;
+    }
+    if (n !== niveles[niveles.length - 1]) chk(J.nivelAbierto(niveles[niveles.indexOf(n) + 1]), 'al dominar ' + n + ' se abre el siguiente');
+    AC.reg.niveles[n].teoremas.forEach(t => chk(AC.codice.tiene(e, t), 'el teorema ' + t + ' debería estar en el Códice'));
+    sumaDias(1);
+  });
+  console.log('  mundo 1: ' + niveles.length + ' niveles dominados en ' + tareas + ' tareas perfectas; teoremas en el Códice: ' + AC.codice.ganados(e).length + ' de ' + Object.keys(AC.reg.teoremas).length + '.');
+  const d = AC.jefe.disponible(e, 1); chk(d.ok, 'con todo dominado el jefe está disponible');
+  // victoria sin pistas
+  let B = AC.jefe.nuevo(e, 1);
+  chk(B.cola.length === 10 && B.cola.filter(x => x.fase === 'calculo').length === 6 && B.cola.filter(x => x.fase === 'estrategia').length === 3 && B.cola.filter(x => x.fase === 'demostracion').length === 1, 'el jefe tiene 6 + 3 + 1 pruebas');
+  chk(AC.jefe.DANO.calculo * 6 + AC.jefe.DANO.estrategia * 3 + AC.jefe.DANO.demostracion === 100, 'el daño total suma 100');
+  const ventana = JSON.stringify(e.niveles['1.1'].ventana);
+  for (let paso; (paso = AC.jefe.actual(B)); ) {
+    const inst = J.instanciar(paso.task), res = J.corregir(inst, bot.resolver(inst));
+    chk(res.ok, 'el jefe: la solución de referencia de ' + inst.id + ' no se acepta');
+    J.registrar(inst, res, { pistas: 0, ms: 3000, contexto: 'jefe' });
+    AC.jefe.resolver(B, res.ok, 0, inst.habilidades);
+  }
+  chk(B.resultado === 'victoria' && B.vida === 0 && B.corazones === 3, 'el jugador perfecto derrota al jefe sin perder corazones');
+  chk(JSON.stringify(e.niveles['1.1'].ventana) === ventana, 'los intentos del jefe no tocan la ventana de dominio');
+  const logros = AC.jefe.cerrar(e, B, J.hoy());
+  chk(e.mundos[1].jefeDerrotado && e.mundos[1].sinPistas && logros.includes('sin-pistas-jefe'), 'victoria sin pistas: jefe derrotado y logro «Sin pistas en un jefe»');
+  // el jefe exige citar teoremas de niveles anteriores (la demostración es una construcción abierta)
+  AC.reg.mundos[0].jefe.demos.forEach(id => { const citados = new Set(AC.demo.resolver(AC.reg.demos[id], AC.rng('x')).lineas.map(l => l.just.ref).filter(x => AC.reg.teoremas[x])); chk(citados.size >= 2, id + ': la demostración del jefe debe citar al menos 2 teoremas de niveles anteriores (cita ' + citados.size + ')'); });
+  // derrota: tres fallos, repaso dirigido y reintento con otras instancias
+  B = AC.jefe.nuevo(e, 1); const primera = JSON.stringify(B.cola.map(x => x.task.seed));
+  let fallos = 0;
+  for (let paso; (paso = AC.jefe.actual(B)); ) {
+    const inst = J.instanciar(paso.task), mala = fallos < 3, res = J.corregir(inst, mala ? bot.equivocada(inst) : bot.resolver(inst));
+    if (mala) fallos++;
+    J.registrar(inst, res, { pistas: 1, ms: 3000, contexto: 'jefe' }); AC.jefe.resolver(B, res.ok, 1, inst.habilidades);
+  }
+  chk(B.resultado === 'derrota' && B.corazones === 0 && B.vida > 0, 'tres fallos son una derrota con vida restante');
+  const dir = AC.jefe.repasoDirigido(e, B);
+  chk(dir.length >= 3 && dir.length <= 5, 'el repaso dirigido tiene entre 3 y 5 ejercicios');
+  chk(dir.every(t => { const inst = J.instanciar(t); return AC.ejercicio.corregir(inst, bot.resolver(inst)).ok; }), 'los ejercicios del repaso dirigido se pueden resolver');
+  const intentos = e.mundos[1].intentos; AC.jefe.cerrar(e, B, J.hoy());
+  chk(e.mundos[1].intentos === intentos + 1 && e.mundos[1].jefeDerrotado, 'una derrota no borra una victoria anterior');
+  chk(JSON.stringify(AC.jefe.nuevo(e, 1).cola.map(x => x.task.seed)) !== primera, 'el reintento usa instancias nuevas');
+  // con pistas no hay logro de «sin pistas»
+  const e2 = AC.guardado.nuevo('2026-11-01'); e2.mundos[1] = { jefeDerrotado: false, intentos: 0, sinPistas: false };
+  const B2 = { pistas: 2, resultado: 'victoria', mundo: 1 }; const l2 = AC.jefe.cerrar(e2, B2, '2026-11-01');
+  chk(e2.mundos[1].jefeDerrotado && !e2.mundos[1].sinPistas && !l2.includes('sin-pistas-jefe'), 'con pistas se derrota al jefe pero sin el logro');
 })();
 
 console.log('\n' + (malos ? '✗ ' + malos + ' fallo(s) en ' + comprobaciones + ' comprobaciones' : '✓ ' + comprobaciones + ' comprobaciones, 0 fallos'));

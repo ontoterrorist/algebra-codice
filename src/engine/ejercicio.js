@@ -20,6 +20,7 @@
     const rng = AC.rng(task.seed + '|' + g.id);
     const d = g.generar(rng, task.dificultad || g.dificultad, ctx || {});
     if (!d.pistas || d.pistas.length !== 3) throw new Error(g.id + ': hacen falta exactamente 3 pistas');
+    if (d.firmas) { const vistos = new Set(); d.firmas = d.firmas.filter(f => { const k = JSON.stringify(f.respuesta); if (vistos.has(k)) return false; vistos.add(k); return true; }); }
     return Object.assign({
       tipo: 'gen', id: g.id, seed: task.seed, familia: g.familia, modo: g.modo || 'app', escalon: null,
       mundo: g.mundo, nivel: g.nivel, habilidades: g.habilidades, requiere: g.requiere, dificultad: g.dificultad,

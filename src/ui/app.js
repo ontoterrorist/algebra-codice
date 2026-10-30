@@ -51,7 +51,7 @@
     const V = ui.vistas;
     const mapa = {
       inicio: () => V.inicio(), mapa: () => V.mapa(), nivel: () => V.nivel(a), leccion: () => V.leccion(a), practica: () => V.practica(a),
-      repaso: () => V.repaso(), diario: () => V.diario(), reloj: () => V.reloj(), codice: () => V.codice(a), demostrar: () => V.demostrar(a),
+      repaso: () => V.repaso(), jefe: () => V.jefe(a), diario: () => V.diario(), reloj: () => V.reloj(), codice: () => V.codice(a), demostrar: () => V.demostrar(a),
       panel: () => V.panel(), ajustes: () => V.ajustes(),
     };
     const main = ui.$('#main'); ui.vaciar(main);

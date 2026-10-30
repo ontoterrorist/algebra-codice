@@ -31,7 +31,7 @@
       let inst;
       try { inst = J.instanciar(task); } catch (e) { raiz.appendChild(h('p', { class: 'error' }, 'No pude crear el ejercicio: ' + e.message)); return; }
       t0 = Date.now(); ui.ultima = inst; // (la prueba de humo en navegador lo lee)
-      const pidioConfianza = inst.confianza && AC.hash(inst.seed + '|conf') % 3 === 0;
+      const pidioConfianza = !S.sinExtras && inst.confianza && AC.hash(inst.seed + '|conf') % 3 === 0;
       let pistas = 0, confianza = null, hecho = false;
       const res = h('div', { class: 'resultado', 'aria-live': 'polite' });
       const bPistas = h('div', { class: 'pistas' });
@@ -70,6 +70,7 @@
         const ef = J.registrar(inst, r, { pistas, ms: Date.now() - t0, confianza: pidioConfianza ? confianza : null, contexto: S.contexto });
         R.n++; if (r.ok) R.ok++; R.xp += ef.xp; (ef.logros || []).forEach(l => R.nuevos.push(l));
         ctl.marcar(r); ctl.bloquear();
+        if (S.alResultado) S.alResultado(r, ef, pistas, inst);
         resultado(r, ef);
         actualizarCabecera();
       }
@@ -98,7 +99,7 @@
         else if (inst.explicacion && r.ok && inst.tipo === 'gen') res.appendChild(h('details', { class: 'solucion' }, h('summary', null, 'Ver el razonamiento'), ui.parrafo(inst.explicacion)));
         else if (inst.tipo === 'dem' && inst.modo !== 'redactar') res.appendChild(h('details', { class: 'solucion' }, h('summary', null, 'Ver la demostración modelo'), ui.parrafo(inst.explicacion)));
         // autoexplicación
-        if (r.ok && inst.autoexplicacion && AC.hash(inst.seed + '|auto') % 2 === 0 && reg.bancos[inst.autoexplicacion]) {
+        if (r.ok && !S.sinExtras && inst.autoexplicacion && AC.hash(inst.seed + '|auto') % 2 === 0 && reg.bancos[inst.autoexplicacion]) {
           const b = reg.bancos[inst.autoexplicacion], orden = AC.rng(inst.seed + '|ae').shuffle(b.opciones);
           const caja = h('fieldset', { class: 'autoexp' }, h('legend', null, 'Autoexplicación: ' + b.pregunta));
           orden.forEach(o => caja.appendChild(h('button', { type: 'button', class: 'opcion-ae', onclick: ev => {
@@ -111,7 +112,7 @@
         const sig = h('button', { type: 'button', class: 'primario', onclick: () => { S.actual = null; cargar(); window.scrollTo(0, 0); } }, S.total && R.n >= S.total ? 'Ver resumen' : 'Siguiente');
         nav.appendChild(sig);
         if (!r.ok && S.otra) nav.appendChild(h('button', { type: 'button', class: 'secundario', onclick: () => { S.actual = S.otra(task); cargar(); window.scrollTo(0, 0); } }, 'Probar otra variante'));
-        nav.appendChild(h('button', { type: 'button', class: 'secundario', onclick: () => { S.actual = null; ui.vaciar(raiz); raiz.appendChild(S.alFinal(R)); } }, 'Terminar sesión'));
+        nav.appendChild(h('button', { type: 'button', class: 'secundario', onclick: () => { S.actual = null; ui.vaciar(raiz); raiz.appendChild(S.alFinal(R)); } }, S.etiquetaFin || 'Terminar sesión'));
         res.appendChild(nav);
         setTimeout(() => sig.focus(), 50);
       }
@@ -143,6 +144,11 @@
     const p = AC.xp.progreso(e.jugador.xp), racha = e.jugador.racha;
     const diaHecho = e.diario[hoy] && e.diario[hoy].hecho;
     const relojOk = AC.planificador.nivelesReloj(e).length > 0;
+    const niveles = Object.keys(reg.niveles);
+    const nSeg = niveles.find(n => J.nivelAbierto(n) && !(e.niveles[n] && e.niveles[n].dominado));
+    const mJefe = reg.mundos.find(x => x.jefe && x.niveles.length);
+    const jefeVencido = mJefe && e.mundos[mJefe.id] && e.mundos[mJefe.id].jefeDerrotado;
+    const jefeAbierto = mJefe && AC.jefe.disponible(e, mJefe.id).ok;
     const t = (id, txt, desc, extra) => h('a', { href: '#' + id, class: 'tarjeta enlace-tarjeta' }, h('h3', null, txt), h('p', null, desc), extra || null);
     return h('div', { class: 'vista' },
       h('h1', null, 'El Códice de Álgebra'),
@@ -151,7 +157,8 @@
         h('div', null, h('strong', null, 'Nivel ' + p.nivel), h('span', { class: 'etq' }, ' · ' + e.jugador.xp + ' XP'), barra(p.frac, 'Progreso hacia el nivel ' + (p.nivel + 1))),
         h('div', null, h('span', { 'aria-hidden': 'true' }, '🔥 '), h('strong', null, racha.cuenta + (racha.cuenta === 1 ? ' día' : ' días')), h('span', { class: 'etq' }, ' de racha' + (racha.gracia ? ' · ' + racha.gracia + ' ficha' + (racha.gracia > 1 ? 's' : '') + ' de gracia' : '')))),
       h('div', { class: 'rejilla' },
-        t('/nivel/1.1', 'Seguir', 'Nivel 1.1 — Lógica proposicional.'),
+        nSeg ? t('/nivel/' + nSeg, 'Seguir', 'Nivel ' + nSeg + ' — ' + reg.niveles[nSeg].titulo + '.') : t('/mapa', 'Seguir', 'Todo lo disponible está dominado.'),
+        mJefe ? t('/jefe/' + mJefe.id, 'Jefe', jefeVencido ? 'Derrotado: ' + mJefe.jefe.titulo + '.' : jefeAbierto ? mJefe.jefe.titulo + ': ¡listo para el combate!' : mJefe.jefe.titulo + ' (se abre al dominar el mundo).') : null,
         t('/repaso', 'Repaso', venc.length ? venc.length + ' habilidad' + (venc.length > 1 ? 'es' : '') + ' por repasar.' : 'Nada vencido por ahora.', venc.length ? h('span', { class: 'insignia' }, String(venc.length)) : null),
         t('/diario', 'Desafío del día', diaHecho ? 'Hecho hoy (' + e.diario[hoy].puntaje + '/5).' : 'Cinco ejercicios nuevos cada día.'),
         relojOk ? t('/reloj', 'Contrarreloj', 'Con contenido que ya dominas.') : h('div', { class: 'tarjeta desactivada' }, h('h3', null, 'Contrarreloj'), h('p', null, 'Se abre al dominar un nivel.')),
@@ -175,6 +182,7 @@
         niv.dominado ? h('p', null, 'Nivel dominado. ', estrellas(niv.estrellas || 1)) : h('p', null, 'Para dominar el nivel: al menos 8 aciertos de tus últimos 10 intentos válidos y demostraciones correctas sobre 2 enunciados distintos.'),
         barra(ev.n / AC.dominio.TAM, 'Intentos en la ventana'), h('p', { class: 'etq' }, ev.n + ' de 10 intentos · ' + Math.round(ev.ratio * 100) + ' % de aciertos · ' + ev.enunciados + ' de 2 enunciados con demostración correcta'),
         h('p', { class: 'etq' }, 'Un acierto con las tres pistas no cuenta para el dominio; repetir la misma variante cuenta una vez.')),
+      def.teoremas.some(t => !AC.codice.tiene(e, t)) ? h('p', { class: 'firma' }, h('strong', null, 'Te faltan teoremas por demostrar: '), def.teoremas.filter(t => !AC.codice.tiene(e, t)).map((t, i) => h('span', null, i ? ', ' : '', enlace('/demostrar/' + t, reg.teoremas[t].titulo))), '. Los necesitarás para el jefe.') : null,
       h('div', { class: 'acciones' }, enlace('/leccion/' + id, 'Mini-lección', 'boton secundario'), enlace('/practica/' + id, 'Practicar', 'boton primario')),
       h('h2', null, 'Teoremas del nivel'),
       h('ul', { class: 'lista-teoremas' }, def.teoremas.map(t => {
@@ -204,7 +212,7 @@
 
   V.repaso = function () {
     const tareas = AC.planificador.sesionRepaso(est(), J.hoy(), 12);
-    if (!tareas.length) return h('div', { class: 'vista' }, h('h1', null, 'Repaso'), h('p', { class: 'lema' }, 'No hay habilidades vencidas. Vuelve cuando se acerquen sus fechas, o sigue practicando.'), enlace('/nivel/1.1', 'Ir al nivel 1.1', 'boton primario'));
+    if (!tareas.length) return h('div', { class: 'vista' }, h('h1', null, 'Repaso'), h('p', { class: 'lema' }, 'No hay habilidades vencidas. Vuelve cuando se acerquen sus fechas, o sigue practicando.'), enlace('/inicio', 'Volver al inicio', 'boton primario'));
     let i = 0;
     const S = { contexto: 'repaso', total: tareas.length, siguiente: () => tareas[i++] || null, alFinal: resumenSesion('Repaso terminado', '/inicio') };
     return h('div', { class: 'vista' }, h('h1', null, 'Repaso'), h('p', { class: 'lema' }, 'Habilidades vencidas, mezcladas.'), vistaEjercicio(S));
@@ -231,6 +239,70 @@
       resta--; const el = ui.$('#reloj-vivo'); if (el) el.textContent = '⏱ ' + resta + ' s';
       if (resta <= 0) { fin = true; clearInterval(iv); }
     }, 1000);
+    return vista;
+  };
+
+  /* ---------- jefe ---------- */
+  V.jefe = function (id) {
+    const mid = Number(id) || 1, m = reg.mundos.find(x => x.id === mid), e = est();
+    const vista = h('div', { class: 'vista' });
+    if (!m || !m.jefe) { vista.append(h('h1', null, 'Jefe'), h('p', { class: 'construccion' }, 'En construcción.'), enlace('/mapa', 'Volver al mapa')); return vista; }
+    vista.append(h('p', { class: 'migas' }, enlace('/mapa', 'Mapa'), ' › Mundo ' + mid + ' › Jefe'), h('h1', null, m.jefe.titulo));
+    const disp = AC.jefe.disponible(e, mid);
+    if (!disp.ok) {
+      ui.anadir(vista, [h('p', { class: 'lema' }, 'El jefe se abre cuando dominas todos los niveles del mundo y tienes todos sus teoremas en el Códice: sus pruebas exigen citarlos.'),
+        disp.falta.niveles.length ? h('div', { class: 'tarjeta' }, h('h3', null, 'Niveles por dominar'), h('ul', null, disp.falta.niveles.map(n => h('li', null, enlace('/nivel/' + n, 'Nivel ' + n + ' · ' + reg.niveles[n].titulo))))) : null,
+        disp.falta.teoremas.length ? h('div', { class: 'tarjeta' }, h('h3', null, 'Teoremas por demostrar'), h('ul', null, disp.falta.teoremas.map(t => h('li', null, enlace('/demostrar/' + t, reg.teoremas[t].titulo))))) : null]);
+      return vista;
+    }
+    const caja = h('div', null); vista.appendChild(caja);
+    const ya = e.mundos[mid] && e.mundos[mid].jefeDerrotado;
+    function intro() {
+      ui.vaciar(caja);
+      ui.anadir(caja, [h('p', { class: 'lema' }, ya ? 'Ya lo derrotaste' + (e.mundos[mid].sinPistas ? ' sin pistas' : '') + '. Puedes volver a enfrentarlo cuando quieras.' : 'Un combate de tres fases con todo lo que aprendiste en el Mundo ' + mid + '.'),
+        h('div', { class: 'tarjeta' }, h('ul', null,
+          h('li', null, h('strong', null, 'Cálculo: '), '6 ejercicios, uno por nivel (8 puntos de daño cada uno).'),
+          h('li', null, h('strong', null, 'Estrategia: '), '3 elecciones de método (10 de daño cada una).'),
+          h('li', null, h('strong', null, 'Demostración: '), 'una construcción abierta que exige citar teoremas ganados (22 de daño).'),
+          h('li', null, 'Tienes ', h('strong', null, '3 corazones'), ': un fallo te quita uno y no hace daño. Las pistas restan XP, nunca bloquean.'),
+          h('li', null, 'Si pierdes, practicas lo que fallaste y puedes reintentar al instante con ejercicios nuevos; no se pierde nada.'))),
+        h('div', { class: 'acciones' }, h('button', { type: 'button', class: 'primario', onclick: combate }, ya ? 'Enfrentarlo de nuevo' : 'Empezar el combate'))]);
+    }
+    function combate() {
+      ui.vaciar(caja);
+      const B = AC.jefe.nuevo(est(), mid); let cerrado = false, logros = [];
+      const panel = h('div', { class: 'panel-jefe' });
+      function pintar() {
+        ui.vaciar(panel); const paso = AC.jefe.actual(B);
+        ui.anadir(panel, [h('div', { class: 'fila-jefe' }, h('strong', null, m.jefe.titulo), h('span', { class: 'chip' }, paso ? 'Fase: ' + AC.jefe.NOMBRE_FASE[paso.fase] : B.resultado === 'victoria' ? 'Vencido' : 'Derrota')),
+          h('div', { class: 'barra vida', role: 'progressbar', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': String(B.vida), 'aria-label': 'Vida del jefe' }, h('div', { class: 'relleno', style: { width: B.vida + '%' } })),
+          h('div', { class: 'fila-jefe' }, h('span', { class: 'etq' }, 'Vida del jefe: ' + B.vida + ' / 100'), h('span', { class: 'corazones', role: 'img', 'aria-label': B.corazones + ' de 3 corazones' }, [0, 1, 2].map(i => h('span', { class: i < B.corazones ? 'corazon' : 'corazon perdido', 'aria-hidden': 'true' }, i < B.corazones ? '♥' : '♡'))))]);
+      }
+      function repasoDirigido() {
+        const tareas = AC.jefe.repasoDirigido(est(), B); let i = 0;
+        ui.vaciar(caja);
+        ui.anadir(caja, [h('h2', null, 'Repaso dirigido'), h('p', { class: 'lema' }, 'Ejercicios sobre lo que falló en el combate.'), ui.vistaEjercicio({ contexto: 'repaso', total: tareas.length, siguiente: () => tareas[i++] || null,
+          alFinal: R => h('div', { class: 'tarjeta resumen' }, h('h2', null, 'Repaso terminado'), h('p', null, 'Acertaste ' + R.ok + ' de ' + R.n + '. ¿Listo para otra vuelta?'), h('div', { class: 'acciones' }, h('button', { type: 'button', class: 'primario', onclick: combate }, 'Reintentar al jefe'), enlace('/mapa', 'Mapa', 'boton secundario'))) })]);
+      }
+      function final() {
+        if (!cerrado && B.resultado) { cerrado = true; logros = AC.jefe.cerrar(est(), B, J.hoy()); J.guardar(); actualizarCabecera(); }
+        pintar();
+        const nombres = B.fallos.map(hid => (reg.habilidades[hid] || { nombre: hid }).nombre);
+        if (B.resultado === 'victoria') { AC.sonido.tocar('nivel'); AC.fx.particulas(panel, 70); }
+        return h('div', { class: 'tarjeta resumen' },
+          B.resultado === 'victoria' ? h('div', null, h('h2', null, '¡Derrotaste a ' + m.jefe.titulo + '!'), h('p', null, 'Terminaste con ' + B.corazones + ' de 3 corazones' + (B.pistas === 0 ? ', sin usar pistas.' : ' y ' + B.pistas + ' pista' + (B.pistas > 1 ? 's' : '') + '.')), (logros || []).map(l => h('p', { class: 'logro-linea' }, '🏅 ', AC.logros.DEFS.find(d => d.id === l).nombre)))
+            : B.resultado === 'derrota' ? h('div', null, h('h2', null, 'El Guardián resiste'), h('p', null, 'Perdiste los tres corazones. Quedaban ' + B.vida + ' puntos de vida; nada se pierde.'), nombres.length ? h('p', null, 'Lo que falló: ', nombres.join(', '), '.') : null)
+              : h('div', null, h('h2', null, 'Combate interrumpido'), h('p', null, 'Puedes empezar otro cuando quieras.')),
+          h('div', { class: 'acciones' }, B.resultado === 'derrota' ? h('button', { type: 'button', class: 'primario', onclick: repasoDirigido }, 'Repaso dirigido') : null,
+            h('button', { type: 'button', class: B.resultado === 'derrota' ? 'secundario' : 'primario', onclick: combate }, B.resultado === 'victoria' ? 'Enfrentarlo de nuevo' : 'Reintentar ahora'), enlace('/mapa', 'Mapa', 'boton secundario')));
+      }
+      pintar();
+      ui.anadir(caja, [panel, vistaEjercicio({ contexto: 'jefe', sinExtras: true, etiquetaFin: 'Abandonar el combate', total: B.cola.length,
+        siguiente: () => { const p = AC.jefe.actual(B); return p ? p.task : null; },
+        alResultado: (r, ef, pistas, inst) => { AC.jefe.resolver(B, !!r.ok, pistas, inst.habilidades); pintar(); },
+        alFinal: () => final() })]);
+    }
+    intro();
     return vista;
   };
 
@@ -299,7 +371,7 @@
       const a = pos[r], b = pos[t.id], mismo = a.x === b.x;
       const d = mismo ? 'M' + (a.x + W / 2) + ',' + (a.y + Hn) + ' C' + (a.x + W / 2) + ',' + (a.y + Hn + 16) + ' ' + (b.x + W / 2) + ',' + (b.y - 16) + ' ' + (b.x + W / 2) + ',' + b.y
         : 'M' + (a.x + W) + ',' + (a.y + Hn / 2) + ' C' + (a.x + W + 40) + ',' + (a.y + Hn / 2) + ' ' + (b.x - 40) + ',' + (b.y + Hn / 2) + ' ' + b.x + ',' + (b.y + Hn / 2);
-      svg.appendChild(s('path', { d, class: 'arista' + (AC.codice.tiene(e, r) ? ' viva' : '') }));
+      svg.appendChild(s('path', { d, class: 'arista' + (AC.codice.tiene(e, r) ? ' viva' : '') + (reg.teoremas[r].nivel !== t.nivel ? ' cruza' : '') }));
     }));
     Object.values(reg.teoremas).forEach(t => {
       const p = pos[t.id], st = AC.codice.estado(e, t.id), mad = AC.codice.madurez(e, t.id);
@@ -319,7 +391,7 @@
       h('div', { class: 'rejilla' }, reg.mundos.map(m => {
         const activo = m.niveles.length > 0;
         return h('div', { class: 'tarjeta ' + (activo ? '' : 'desactivada') }, h('h3', null, m.id + '. ' + m.titulo), h('p', null, m.resumen),
-          activo ? h('div', null, m.niveles.map(n => h('p', null, enlace('/nivel/' + n, 'Nivel ' + n + ' · ' + nivelDef(n).titulo), ' ', estrellas((est().niveles[n] || {}).estrellas || 0))), h('p', { class: 'etq' }, 'En construcción: ' + m.pendientes.map(p => p.id).join(', ') + '.')) : h('p', { class: 'construccion' }, 'En construcción'));
+          activo ? h('div', null, m.niveles.map(n => h('p', null, enlace('/nivel/' + n, 'Nivel ' + n + ' · ' + nivelDef(n).titulo), ' ', estrellas((est().niveles[n] || {}).estrellas || 0))), m.jefe ? h('p', null, enlace('/jefe/' + m.id, 'Jefe · ' + m.jefe.titulo), ' ', (est().mundos[m.id] || {}).jefeDerrotado ? '✓ derrotado' : '') : null, m.pendientes.length ? h('p', { class: 'etq' }, 'En construcción: ' + m.pendientes.map(p => p.id).join(', ') + '.') : null) : h('p', { class: 'construccion' }, 'En construcción'));
       })));
   };
 

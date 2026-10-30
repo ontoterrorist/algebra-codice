@@ -8,7 +8,7 @@
     TAM,
     nuevo,
     entra(inst, pistas, contexto) {
-      if (contexto === 'reloj') return false;
+      if (contexto === 'reloj' || contexto === 'jefe') return false;
       return !(pistas >= 3); // 3 pistas: ni suma ni resta (se decide en §12.1.2)
     },
     registrar(niv, e) { // e = {k, ok, w, dem, e, ma}

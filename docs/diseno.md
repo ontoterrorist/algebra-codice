@@ -613,8 +613,8 @@ Esta lista es **legible por máquina**: `tools/test.js` la parseará desde `cont
 [1.2] t.distrib-conj <- t.distrib-prop
 [1.2] t.inclusion-interseccion <-
 [1.3] t.clase-igual <-
-[1.3] t.clases-disjuntas <- t.clase-igual
-[1.3] t.equiv-particion <- t.clase-igual, t.clases-disjuntas
+[1.3] t.clases-disjuntas <- t.clase-igual, t.contrapositiva
+[1.3] t.equiv-particion <- t.clases-disjuntas
 [1.3] t.mod-equivalencia <-
 [1.3] t.unicidad-maximo <-
 [1.4] t.comp-inyectiva <-
@@ -624,7 +624,7 @@ Esta lista es **legible por máquina**: `tools/test.js` la parseará desde `cont
 [1.4] t.factor-inyectiva <-
 [1.5] t.paridad-operaciones <-
 [1.5] t.cuadrado-par <- t.contrapositiva, t.paridad-operaciones
-[1.5] t.raiz2-irracional <- t.cuadrado-par, t.paridad-operaciones
+[1.5] t.raiz2-irracional <- t.cuadrado-par
 [1.5] t.densidad-racionales <-
 [1.6] t.suma-gauss <-
 [1.6] t.serie-geometrica <-
@@ -749,3 +749,13 @@ Decisiones de §12.1 confirmadas («Sí, adelante») y aplicadas tal como se pro
 - **Formato de ejercicios**: las instancias son datos puros (JSON). Las demostraciones declaran los huecos con `⟦id⟧` en el texto y `H(id, correcta, alternativas, esMatemática)`.
 - **Tema por defecto**: nocturno; el claro y «según el sistema» se eligen en Ajustes.
 - **Verificación**: `tools/test.js` (criterios 1 y 2), `tools/humo.js` (el juego en un navegador real: monta cada tipo de ejercicio y lo resuelve a clics), `tools/contraste.js` (AA), `tools/auditar.js` (genera `revision-matematica.md`).
+
+## Apéndice B. Qué cambió al implementar la Fase 2
+
+- **Núcleo nuevo**: `conj.js` (conjuntos por fichas, relaciones y funciones finitas) y `expr.js` (analizador de expresiones algebraicas con coeficientes racionales; la equivalencia es igualdad de funciones racionales por producto cruzado; solo exponentes enteros de 0 a 12). Siguen pendientes `cx`, `poly`, `mat`, `numth` (llegan con los mundos que los usan).
+- **Tipos de respuesta nuevos**: `conjunto` (escribir un conjunto entre llaves), `expr` (expresión en `x` o `n`, con teclado y vista previa) y contraejemplos por evaluación (`satisface-entero`). Los cuatro campos matemáticos comparten el mismo componente.
+- **Jefe** (`engine/jefe.js`, `ui/vistas.js`): 6 ejercicios de cálculo (uno por nivel, 8 de daño), 3 de estrategia (10) y 1 demostración abierta (22). Tres corazones; un fallo quita uno; las pistas restan XP pero no bloquean. La derrota ofrece un repaso dirigido a lo fallado y se puede reintentar al instante con ejercicios nuevos. Se abre cuando los 6 niveles están dominados **y** los 28 teoremas están en el Códice. Los intentos del jefe no tocan la ventana de dominio. Las pruebas del jefe (`dem.jefe-*`) no entran al Códice y las tres citan al menos dos teoremas de niveles anteriores.
+- **Planificador**: mientras falten teoremas por ganar en un nivel, la proporción mínima de demostraciones sube del 30 % al 50 %, de modo que el nivel se domina normalmente con todos sus teoremas ya en el Códice.
+- **Desbloqueo**: el primer nivel de un mundo se abre al derrotar al jefe del mundo anterior (si lo tiene).
+- **Árbol de teoremas (§11.4)**: tres cambios de `requiere` (ver `docs/revision-matematica.md`, duda 4). El bloque sigue siendo el que lee el test.
+- **Verificación**: `tools/tex.js` comprueba con KaTeX todos los fragmentos de TeX que puede ver el jugador y detecta barras invertidas sin duplicar; `tools/humo.js` monta en un navegador real cada tipo de ejercicio y lo resuelve a clics.

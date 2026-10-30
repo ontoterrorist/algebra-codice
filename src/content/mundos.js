@@ -2,13 +2,10 @@
 (function (AC) {
   const R = AC.registrar;
   R.mundo({
-    id: 1, titulo: 'Fundamentos', resumen: 'Lógica, conjuntos, relaciones, funciones, métodos de demostración e inducción.', estado: 'parcial',
-    niveles: ['1.1'],
-    pendientes: [
-      { id: '1.2', titulo: 'Cuantificadores y conjuntos' }, { id: '1.3', titulo: 'Relaciones de equivalencia y orden' },
-      { id: '1.4', titulo: 'Funciones' }, { id: '1.5', titulo: 'Métodos de demostración' }, { id: '1.6', titulo: 'Inducción' },
-      { id: 'J1', titulo: 'Jefe: El Guardián del Principio', jefe: true },
-    ],
+    id: 1, titulo: 'Fundamentos', resumen: 'Lógica, conjuntos, relaciones, funciones, métodos de demostración e inducción.', estado: 'completo',
+    niveles: ['1.1', '1.2', '1.3', '1.4', '1.5', '1.6'],
+    pendientes: [],
+    jefe: { id: 'J1', titulo: 'El Guardián del Principio', estrategia: 'w1.n5.clasificar-metodo', demos: ['dem.jefe-inversa-composicion', 'dem.jefe-complemento-inclusion', 'dem.jefe-suma-cubos'] },
   });
   [
     [2, 'Números', 'Divisibilidad, Euclides, congruencias y números complejos.'],

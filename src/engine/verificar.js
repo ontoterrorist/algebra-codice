@@ -95,6 +95,35 @@
     return { ok: k === n, parcial: k >= n / 2 && k < n, autoeval: true, msg: k + ' de ' + n + ' criterios cumplidos.' };
   };
 
+
+  /* conjuntos (fichas): «{1, 2}», «1,2», «∅» */
+  verif['igual-conjunto'] = (inst, resp, a) => {
+    const r = AC.conj.parse(resp);
+    if (r === null) return { ok: false, sintaxis: true, msg: 'No entiendo ese conjunto. Escribe sus elementos separados por comas, por ejemplo {1, 2, 5}, o ∅ si es vacío.' };
+    const ok = AC.conj.eq(r, a.esperado);
+    return { ok, msg: ok ? 'Correcto.' : (r.length === a.esperado.length ? 'Tienes el mismo número de elementos, pero no son los mismos.' : 'El conjunto no coincide.') };
+  };
+
+  /* expresiones algebraicas: equivalencia exacta como funciones racionales */
+  verif['equivalente-expr'] = (inst, resp, a) => {
+    let g;
+    try { g = AC.expr.parse(String(resp || '')); } catch (e) { return { ok: false, sintaxis: true, msg: e.msg || 'Expresión no válida', pos: e.pos }; }
+    let ok;
+    try { ok = AC.expr.F.igual(AC.expr.aF(g), AC.expr.aF(AC.expr.parse(a.f))); } catch (e) { return { ok: false, sintaxis: true, msg: e.msg || 'Expresión no válida' }; }
+    return { ok, msg: ok ? 'Correcto: tu expresión es equivalente.' : 'Tu expresión no es equivalente a la que se pide.' };
+  };
+
+  /* contraejemplos: se evalúa la afirmación con el entero del jugador */
+  AC.afirmaciones = AC.afirmaciones || {};
+  verif['satisface-entero'] = (inst, resp, a) => {
+    const r = Rat.parse(String(resp == null ? '' : resp));
+    if (!r || !r.isInt()) return { ok: false, sintaxis: true, msg: 'Escribe un número entero.' };
+    const n = Number(r.n);
+    if (n < a.rango[0] || n > a.rango[1]) return { ok: false, msg: 'Elige un entero entre ' + a.rango[0] + ' y ' + a.rango[1] + '.' };
+    const vale = AC.afirmaciones[a.id](n, a);
+    return { ok: !vale, errorEncontrado: false, msg: vale ? 'Con n = ' + n + ' la afirmación se cumple: no la refuta.' : 'Con n = ' + n + ' la afirmación falla: es un contraejemplo válido.' };
+  };
+
   AC.verificar = function (inst, resp) {
     const f = verif[inst.verificador.id];
     if (!f) throw new Error('verificador desconocido: ' + inst.verificador.id);

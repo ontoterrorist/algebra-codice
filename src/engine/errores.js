@@ -13,6 +13,8 @@
       case 'logica': {
         try { return L.equiv(L.parse(String(resp)), L.parse(sig.respuesta)); } catch (e) { return false; }
       }
+      case 'conjunto': { const r = AC.conj.parse(resp), t = AC.conj.parse(sig.respuesta); return r !== null && t !== null && AC.conj.eq(r, t); }
+      case 'expr': { try { return AC.expr.equiv(String(resp), sig.respuesta); } catch (e) { return false; } }
       case 'eleccion': return resp === sig.respuesta;
       case 'multiple': {
         const a = (resp || []).slice().sort(), b = sig.respuesta.slice().sort();

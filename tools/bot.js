@@ -24,6 +24,9 @@ function resolver(inst) {
     case 'conjunto-indices': return a.esperado.slice();
     case 'ruta-valida': return rutaMinima(a.inicio, a.leyes);
     case 'vf-justificado': return { valor: a.valor, just: a.just };
+    case 'igual-conjunto': return AC.conj.fmt(a.esperado);
+    case 'equivalente-expr': return inst.solucionExpr;
+    case 'satisface-entero': { for (let n = a.rango[0]; n <= a.rango[1]; n++) if (!AC.afirmaciones[a.id](n, a)) return String(n); return null; }
     case 'matriz': return a.esperado.map(f => f.slice());
     case 'asignacion': {
       const f = L.parse(a.f), g = L.parse(a.g);
@@ -51,6 +54,9 @@ function equivocada(inst) {
     case 'conjunto-indices': return r.length ? [] : [0];
     case 'ruta-valida': return [];
     case 'vf-justificado': return { valor: !r.valor, just: r.just };
+    case 'igual-conjunto': return '{99}';
+    case 'equivalente-expr': return '1/7';
+    case 'satisface-entero': { for (let n = a.rango[0]; n <= a.rango[1]; n++) if (AC.afirmaciones[a.id](n, a)) return String(n); return String(a.rango[0] - 1); }
     case 'matriz': return r.map((f, i) => f.map((x, j) => (i === 0 && j === 0 ? '9' : x)));
     case 'asignacion': { const f = L.parse(a.f), g = L.parse(a.g); return L.envs(a.vars).find(e => L.ev(f, e) === L.ev(g, e)); }
     case 'demo-ordenar': return { usadas: r.usadas.slice().reverse() };

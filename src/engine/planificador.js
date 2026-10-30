@@ -85,7 +85,8 @@
       const prop = ult.length ? ult.filter(a => a.fam === 'demostracion').length / ult.length : 0;
 
       // 1. demostración necesaria para sostener ≥30 %
-      if (ult.length >= 2 && prop < 0.36 && (demos.length || gensProof.length)) { const t = pruebaPendiente(est, demos, rng, gensProof); if (t) return t; }
+      const porGanar = demos.filter(d => d.teorema && !AC.codice.tiene(est, d.teorema)).length; // mientras falten teoremas, más demostraciones
+      if (ult.length >= 2 && prop < (porGanar ? 0.5 : 0.36) && (demos.length || gensProof.length)) { const t = pruebaPendiente(est, demos, rng, gensProof); if (t) return t; }
       // 2. repaso de lo vencido, 1 de cada 4
       const hoy = ctx.hoy || AC.fecha.dia();
       const vencidas = reg.niveles[nivel].habilidades.filter(h => AC.leitner.vencida(est.habilidades[h], hoy));

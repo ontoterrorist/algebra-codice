@@ -103,6 +103,14 @@
         const c = ui.campoMate({ modo: 'logica', vars: e.vars, etiqueta: 'Tu fórmula', onCambio: api.cambio });
         return { el: c.el, leer: c.valor, marcar() {}, bloquear: c.bloquear, foco: () => c.input.focus() };
       }
+      case 'expr': {
+        const c = ui.campoMate({ modo: 'expr', vars: e.vars, etiqueta: 'Tu expresión', onCambio: api.cambio });
+        return { el: c.el, leer: c.valor, marcar() {}, bloquear: c.bloquear, foco: () => c.input.focus() };
+      }
+      case 'conjunto': {
+        const c = ui.campoMate({ modo: 'conjunto', etiqueta: 'Tu conjunto', onCambio: api.cambio });
+        return { el: c.el, leer: c.valor, marcar() {}, bloquear: c.bloquear, foco: () => c.input.focus() };
+      }
       case 'eleccion': case 'multiple': {
         const multi = e.tipo === 'multiple', name = 'op' + (++uid);
         const sel = new Set();
