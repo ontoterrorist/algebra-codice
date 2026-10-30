@@ -737,3 +737,15 @@ Mundos 3–8 en detalle; música/sonido concretos; paleta definitiva de partícu
 | 4–9 | Un mundo por fase (3 a 8) | ídem |
 
 Cada fase termina con un informe: qué quedó hecho, qué no se verificó y qué dudas matemáticas hay en `docs/revision-matematica.md`.
+
+---
+
+## Apéndice A. Qué cambió al implementar la Fase 1
+
+Decisiones de §12.1 confirmadas («Sí, adelante») y aplicadas tal como se propusieron. Diferencias entre este diseño y el código, para que el documento no mienta:
+
+- **Estructura de archivos**: el motor quedó en `engine/registro.js, verificar.js, errores.js, demostracion.js, ejercicio.js, leitner.js, dominio.js, xp.js, codice.js, guardado.js, juego.js, planificador.js, reto.js, logros.js`. El desvanecimiento por teorema vive en `juego.js` (`registrar`) y en `planificador.js`, no en un `desvanecer.js` aparte. `jefe.js` queda para la Fase 2 (necesita niveles de todo el mundo).
+- **Núcleo**: en la Fase 1 solo existen `rng`, `rat` y `logic`. `cx`, `poly`, `mat`, `numth`, `sets` y el analizador de expresiones algebraicas llegan con los niveles que los usan (1.2–1.6, Mundo 2, 3, 4…). La grilla de matrices ya existe y se prueba con un ejercicio de prueba.
+- **Formato de ejercicios**: las instancias son datos puros (JSON). Las demostraciones declaran los huecos con `⟦id⟧` en el texto y `H(id, correcta, alternativas, esMatemática)`.
+- **Tema por defecto**: nocturno; el claro y «según el sistema» se eligen en Ajustes.
+- **Verificación**: `tools/test.js` (criterios 1 y 2), `tools/humo.js` (el juego en un navegador real: monta cada tipo de ejercicio y lo resuelve a clics), `tools/contraste.js` (AA), `tools/auditar.js` (genera `revision-matematica.md`).
