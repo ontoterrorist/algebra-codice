@@ -393,7 +393,7 @@
       h('div', { class: 'rejilla' }, reg.mundos.map(m => {
         const activo = m.niveles.length > 0;
         return h('div', { class: 'tarjeta ' + (activo ? '' : 'desactivada') }, h('h3', null, m.id + '. ' + m.titulo), h('p', null, m.resumen),
-          activo ? h('div', null, m.niveles.map(n => h('p', null, enlace('/nivel/' + n, 'Nivel ' + n + ' · ' + nivelDef(n).titulo), ' ', estrellas((est().niveles[n] || {}).estrellas || 0))), m.jefe ? h('p', null, enlace('/jefe/' + m.id, 'Jefe · ' + m.jefe.titulo), ' ', (est().mundos[m.id] || {}).jefeDerrotado ? '✓ derrotado' : '') : null, m.pendientes.length ? h('p', { class: 'etq' }, 'En construcción: ' + m.pendientes.map(p => p.id).join(', ') + '.') : null) : h('p', { class: 'construccion' }, 'En construcción'));
+          activo ? h('div', null, m.niveles.map(n => h('p', null, enlace('/nivel/' + n, 'Nivel ' + n + ' · ' + nivelDef(n).titulo), ' ', estrellas((est().niveles[n] || {}).estrellas || 0))), m.jefe ? h('p', { class: 'jefe-mapa' }, AC.retrato(m.jefe.id, m.jefe.titulo, 'mini'), enlace('/jefe/' + m.id, 'Jefe · ' + m.jefe.titulo), ' ', (est().mundos[m.id] || {}).jefeDerrotado ? '✓ derrotado' : '') : null, m.pendientes.length ? h('p', { class: 'etq' }, 'En construcción: ' + m.pendientes.map(p => p.id).join(', ') + '.') : null) : h('p', { class: 'construccion' }, 'En construcción'));
       })));
   };
 

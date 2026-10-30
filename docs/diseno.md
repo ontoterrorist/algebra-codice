@@ -760,6 +760,15 @@ Decisiones de §12.1 confirmadas («Sí, adelante») y aplicadas tal como se pro
 - **Árbol de teoremas (§11.4)**: tres cambios de `requiere` (ver `docs/revision-matematica.md`, duda 4). El bloque sigue siendo el que lee el test.
 - **Verificación**: `tools/tex.js` comprueba con KaTeX todos los fragmentos de TeX que puede ver el jugador y detecta barras invertidas sin duplicar; `tools/humo.js` monta en un navegador real cada tipo de ejercicio y lo resuelve a clics.
 
+## Apéndice B bis. Qué cambió al implementar las Fases 3 a 8 (Mundos 2 a 8)
+
+- **Mundos completos.** Mundo 2 (6 niveles), 3 a 8 (4 niveles cada uno), 8 jefes. 150 teoremas, 174 demostraciones (150 más 24 de jefes), 238 generadores. El árbol de los mundos 3 a 8 está en el Apéndice C (generado por `tools/arbol.js`).
+- **Núcleos nuevos.** `core/poly.js` (polinomios racionales: división, mcd, Horner, raíces racionales, irreducibilidad hasta grado 4), `core/mat.js` (matrices sobre ℚ: producto, Gauss-Jordan con registro de pasos, rango, inversa, determinante, núcleo, sistemas, polinomio característico por Faddeev-LeVerrier, valores propios racionales, Gram-Schmidt), `core/grupos.js` (ℤₙ, unidades, órdenes, permutaciones).
+- **Verificadores nuevos.** `factorizacion`, `nucleo-vector`, `dependencia-lineal`, `base-nucleo`, `completa-base`, `matriz-diagonalizante`, además de los del Mundo 2 (`combinacion-lineal`, `tupla-racional`, `conjunto-racionales`, `conjunto-complejos`, `equivalente-complejo`).
+- **Cambios en el diseño de requisitos.** `t.clases-disjuntas` ← `t.clase-igual`, `t.contrapositiva`; `t.equiv-particion` ← `t.clases-disjuntas`; `t.raiz2-irracional` ← `t.cuadrado-par`; `t.algoritmo-division` ← `t.buen-orden`, `t.div-cota`. Los Mundos 3 a 8 usan teoremas de mundos anteriores como herramientas: Vieta usa `t.vieta-cuadratica`; el rango-nulidad usa `t.agregar-independiente`; Fermat desde Lagrange usa `t.zn-cuerpo` y `t.unidades-grupo`.
+- **Compañero y retratos.** El aprendiz de mago y los ocho jefes (magos y hechiceros) se generaron con PixelLab (v3, 80×80 px) y se incrustan como data URIs. El compañero es decorativo (`aria-hidden`), se apaga en Ajustes y respeta «reducir animaciones».
+- **Pruebas.** `node tools/test.js` pasa con 500 semillas por generador (más de 3 millones de comprobaciones): determinismo, respuesta correcta aceptada, errores rechazados y detectados, ≥ 20 variantes, TeX válido (KaTeX), barras sin duplicar, demostraciones en 7 modos, árbol de teoremas, motor de aprendizaje y los 8 mundos con jefes simulados por un jugador de referencia.
+
 ## Apéndice C. Árbol de teoremas de los Mundos 3 a 8 (generado)
 
 Este bloque lo escribe `node tools/arbol.js` a partir del contenido registrado y lo lee `tools/test.js` (si el contenido cambia y el bloque no, la prueba falla).

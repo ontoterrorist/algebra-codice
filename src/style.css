@@ -247,3 +247,5 @@ main { padding-bottom: 84px; }
 @keyframes aparece { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 .reducir .companero-img, .reducir .retrato-jefe, .reducir .companero-burbuja { animation: none !important; }
 @media (prefers-reduced-motion: reduce) { .companero-img, .retrato-jefe, .companero-burbuja { animation: none !important; } }
+.retrato-jefe.mini { width: 40px; height: 40px; vertical-align: middle; margin-right: 8px; }
+.jefe-mapa { display: flex; align-items: center; flex-wrap: wrap; }

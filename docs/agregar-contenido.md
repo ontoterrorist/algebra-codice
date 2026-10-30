@@ -88,3 +88,15 @@ En `src/content/mundos.js`, el mundo lleva `jefe: { id, titulo, estrategia, demo
 ## 5. Qué revisar a mano
 
 Las pruebas no certifican el contenido matemático. Tras agregar teoremas, corre `node tools/auditar.js`, lee `docs/revision-matematica.md` y anota tus dudas en el bloque «Dudas» (el script lo conserva).
+
+## 6. Convenciones que aprendimos en los Mundos 2 a 8
+
+- **Barras de LaTeX.** En plantillas `r` + acento grave (`String.raw`) se escribe `\frac` tal cual. En cadenas con comillas simples o dobles hay que duplicar: `'$\frac{1}{2}$'`. Si se te pasa, `node tools/arreglar-barras.js` duplica las barras en las cadenas que contienen `$`; `tools/escapes.js` (dentro de `test.js`) detecta las que quedan.
+- **Un hueco `⟦h1⟧` nunca va dentro de `$…$`.** Ciérralo antes: `$A(cu)=c(Au)$, que es igual a ⟦h1⟧`. Y deja un espacio entre una macro y una interpolación (`\cdot ${p.x}`, no `\cdot${p.x}`): si no, KaTeX lee `\cdotx`.
+- **La respuesta no puede aparecer en el enunciado.** `test.js` lo comprueba (ignorando el interior de `\begin{pmatrix}…\end{pmatrix}`); si un dato del problema es la respuesta, reformula (por ejemplo, da las matrices y pide la traza, no al revés).
+- **Respuestas con muchas soluciones válidas.** Usa un verificador especial en lugar de comparar con una sola respuesta: `nucleo-vector` (un vector no nulo que cumple `A·x=0`), `dependencia-lineal`, `base-nucleo` (una base de un núcleo, dada por filas), `completa-base`, `matriz-diagonalizante`, `factorizacion`. En `gen.tupla`, `gen.matriz` y `gen.expr` se pasa con `verificador: { id, args }` y `res` es una respuesta válida de ejemplo; las firmas se descartan si el verificador las acepta.
+- **Firmas de error.** Al menos el 80 % de las instancias de un generador deben tener alguna. Si una firma tiene otra forma que la matriz esperada, no se puede escribir en la grilla (`filter` por tamaño).
+- **Variantes.** Cada generador debe producir al menos 20 variantes distintas en las semillas de prueba; `key` identifica la variante.
+- **Jefes.** Las demostraciones del jefe llevan `nivel: 'J<n>'`, `habilidades: []` y deben citar al menos dos teoremas de niveles anteriores; hay seis ejercicios de cálculo (uno por nivel), tres de estrategia (`w<n>.jefe.estrategia`) y una demostración.
+- **Imágenes.** Los retratos están en `assets/personajes/` y se incrustan en `src/ui/personajes.js` con `node tools/imagenes.js`; `AC.retrato(id, titulo, clase)` devuelve el `<img>` de un jefe (`J1`…`J8`). El compañero (`src/ui/companero.js`) reacciona desde `vistas.js` con `AC.companero.reaccionar(evento)`.
+
