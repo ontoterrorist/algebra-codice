@@ -80,8 +80,8 @@
       const r = prov.dar();
       if (!r) { C.decir(elegir('agotadas'), 'alegre'); return; }
       C.actualizarPistas(); clearTimeout(tAtasco);
-      const marca = h('strong', { class: 'cb-marca' }, 'Pista ' + r.n + ' de 3 · ' + ROTULO[r.n - 1]);
-      C.decir(h('div', null, marca, h('div', { class: 'cb-pista' }, r.nodo), r.n === 1 ? h('div', { class: 'cb-nota' }, 'Cada pista resta un poco de XP; nunca te bloquea.') : null), ANIMO.pista, { pista: true, nombre: 'Aprendiz', ms: 16000 });
+      if (r.el && r.el.scrollIntoView) r.el.scrollIntoView({ behavior: AC.fx && AC.fx.reducir() ? 'auto' : 'smooth', block: 'center' });
+      C.decir(h('div', null, h('strong', { class: 'cb-marca' }, 'Pista ' + r.n + ' de 3 · ' + ROTULO[r.n - 1]), h('div', { class: 'cb-pista' }, 'Te la dejé escrita en la página.'), r.n === 1 ? h('div', { class: 'cb-nota' }, 'Cada pista resta un poco de XP; nunca te bloquea.') : null), ANIMO.pista, { pista: true, nombre: 'Aprendiz', ms: 4200 });
     },
   };
 

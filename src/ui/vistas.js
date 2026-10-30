@@ -38,12 +38,12 @@
       const txtPistas = h('div', { class: 'pistas-texto' });
       const botonesPista = [0, 1, 2].map(i => h('button', { type: 'button', class: 'secundario pista', disabled: i > 0, onclick: () => {
         if (hecho || pistas !== i) return;
-        pistas++; txtPistas.appendChild(h('p', { class: 'pista-lin' }, h('strong', null, 'Pista ' + pistas + ': '), ui.mate(inst.pistas[i].replace(/^(Orientación|Idea clave|Primer paso): /, '$1: '))));
+        pistas++; txtPistas.appendChild(h('div', { class: 'pista-lin dialogo-pista' }, AC.personajes && AC.personajes.companero ? h('img', { class: 'dp-avatar', src: AC.personajes.companero, alt: '', width: 48, height: 48, draggable: 'false' }) : null, h('div', { class: 'dp-texto' }, h('strong', null, 'Pista ' + pistas + ' de 3: '), ui.mate(inst.pistas[i]))));
         botonesPista[i].disabled = true; if (botonesPista[i + 1]) botonesPista[i + 1].disabled = false;
         ui.anunciar('Pista ' + pistas); AC.sonido.tocar('click'); AC.companero.actualizarPistas();
       } }, 'Pista ' + (i + 1) + [' · orientación', ' · idea clave', ' · primer paso'][i]));
       bPistas.append(h('span', { class: 'etq' }, 'Pistas (restan XP, nunca bloquean): '), ...botonesPista);
-      AC.companero.enlazarPistas({ dar: () => { if (hecho || pistas > 2) return null; const i = pistas; botonesPista[i].click(); return { n: i + 1, nodo: ui.mate(inst.pistas[i].replace(/^(Orientación|Idea clave|Primer paso): /, '').replace(/^./, c => c.toUpperCase())) }; }, quedan: () => (hecho ? 0 : 3 - pistas) });
+      AC.companero.enlazarPistas({ dar: () => { if (hecho || pistas > 2) return null; const i = pistas; botonesPista[i].click(); return { n: i + 1, el: txtPistas.lastChild }; }, quedan: () => (hecho ? 0 : 3 - pistas) });
       if (R.n === 0 && S.contexto !== 'jefe') AC.companero.reaccionar('ejercicio');
       const bComprobar = h('button', { type: 'button', class: 'primario', onclick: comprobar }, 'Comprobar');
       const ctl = ui.crearControl(inst, { cambio() { if (hecho) return; bComprobar.disabled = false; } });
