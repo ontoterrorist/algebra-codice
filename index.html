@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El Códice de Álgebra</title>
+<meta name="description" content="Juego web en español para aprender álgebra universitaria mediante ejercicios y demostraciones. En diseño.">
+<style>
+:root{--bg:#0b1530;--panel:#13214a;--ink:#e9eefb;--mute:#9fb0d6;--gold:#d4a847;--teal:#3cc6c0;--line:#27386b}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f0e1;--panel:#fffaf0;--ink:#1a2347;--mute:#51608a;--gold:#8a6410;--teal:#0d7c78;--line:#d9ccaa}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:720px;margin:0 auto;padding:48px 16px 64px}
+h1{font:600 clamp(2rem,6vw,3rem)/1.1 "EB Garamond","Cormorant Garamond",Georgia,serif;margin:0 0 .4em;color:var(--gold)}
+h2{font:600 1.35rem/1.2 Georgia,serif;margin:2em 0 .6em}
+p{margin:.6em 0}
+.estado{display:inline-block;border:1px solid var(--teal);color:var(--teal);border-radius:999px;padding:.1em .8em;font-size:.85rem;margin-bottom:1.2em}
+ol{padding-left:1.3em;margin:0}
+li{margin:.25em 0}
+li.wip{color:var(--mute)}
+li.wip::after{content:" — en construcción";font-size:.85em}
+a{color:var(--teal)}
+a:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin-top:1.4em}
+</style>
+</head>
+<body>
+<main>
+<span class="estado">Fase 0 · diseño</span>
+<h1>El Códice de Álgebra</h1>
+<p>Un juego en español para aprender álgebra universitaria resolviendo problemas de aplicación y construyendo demostraciones. Cada teorema que demuestras entra al Códice y se vuelve una herramienta para demostrar el siguiente.</p>
+<div class="card"><p><strong>El juego todavía no existe.</strong> Esta página es solo la entrada del proyecto mientras se revisa el diseño.</p>
+<p><a href="https://github.com/ontoterrorist/algebra-codice/blob/main/docs/diseno.md">Leer el documento de diseño</a></p></div>
+<h2>Mundos</h2>
+<ol>
+<li>Fundamentos: lógica, conjuntos, funciones, métodos de demostración, inducción</li>
+<li>Números: divisibilidad, congruencias, números complejos</li>
+<li class="wip">Polinomios</li>
+<li class="wip">Matrices y sistemas</li>
+<li class="wip">Espacios vectoriales</li>
+<li class="wip">Transformaciones lineales</li>
+<li class="wip">Valores propios y producto interno</li>
+<li class="wip">Estructuras algebraicas</li>
+</ol>
+</main>
+</body>
+</html>
